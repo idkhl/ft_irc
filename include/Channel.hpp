@@ -23,21 +23,20 @@
 class	Channel
 {
 	private:
-		std::vector<Client>		_clients;
+		std::vector<Client *>		_clients;
 		std::string			_name;
 		std::vector<int>		_adminFds;
 
 	public:
 						Channel(Client& client, const std::string& name);
 						~Channel(void) {}
-						Channel(const Channel& channel) : _clients(channel._clients), _name(channel._name) {}
 
 		Channel&			operator=(const Channel& channel) { (void)channel; return *this; }
 		bool				operator==(const std::string& name) const { return _name == name ? true : false; }
 		bool				operator!=(const std::string& name) const { return _name != name ? true : false; }
 
 		const std::string&		getName(void) const { return _name; }
-		std::vector<Client>::iterator	getClient(const int& fd) { return std::find(_clients.begin(), _clients.end(), fd); }
+		Client				*getClient(const int& fd);
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
 
 		void				setName(const std::string& name) { _name = name; }
