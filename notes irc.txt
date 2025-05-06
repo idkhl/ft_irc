@@ -1,0 +1,146 @@
+IRC notes
+
+Une socket c'est un fd qui permet de communiquer entre different
+processus.
+C'est une interface entre la couche d'application et la couche
+de transport des donnes.
+
+Structure socket :
+
+Il y a une structure pour les informations de l'adresse du 
+serveur : la famille d'adresse (AF_INET pour IPv4), le port
+et l'adresse IP pour IPv4 (INADDR_ANY represente n'importe 
+quelle adresse IP, le socket sera lie a toutes les interfaces
+reseau disponibles sur l'hote).
+
+Structure pollfd :
+
+Cette structure permet de coordonner plusieurs fds et de gerer les
+flux de plusieurs fds differents en meme temps, elle contient
+un attribut entier pour le fd, un mask de bits des evenements
+a surveiller (read, write ...) pour le fd donne et un autre
+mask de bits des evenements declenche pour le fd donne.
+POLL_IN permet de rendre le serveur pret a recevoir des connections
+entrantes.
+
+
+fonction socket :
+
+Creer un fd en specifiant un domaine de communication (famille
+d'adresse IP), un type de communication (fournis une communication
+bidirectionnelle et par flux d'octect) et un protocol (0 permet
+de prendre le protocol le plus adapte pour le domaine et le 
+type de communication).
+
+fonction setsockopt :
+
+Cette fonction permet d'ajouter des options de configuration
+du comportement de la socket. 
+- Le 1er parametre c'est le fd, 
+- le 2e parametre c'est le niveau de protocol pour lequel on va 
+utiliser des options (SOL_SOCKET signifie que l'option definie
+est au niveau du socket et doit etre appliquee au socket lui-meme),
+- le 3e parametre definis sur SO_REUSEADDR permet de reutiliser
+immediatement les adresses et ports locaux de la socket sans 
+que le serveur doivent attendre l'expiration de l'etat TIME_WAIT
+par defaut et donc la socket peut reutiliser directement l'adresse
+et le port apres une transmission d'information.
+- le 4e parametre c'est la valeur a renseigner pour l'option
+(ici 1)
+- le 5e parametre c'est la size de la valeur
+
+
+fonction fcntl :
+
+Cette fonction permet de tester plusieurs operation sur les fds
+comme definir des status de flags de la socket. On definit le
+flag O_NONBLOCK pour que la lecture ou l'ecriture dans la 
+socket retourne immediatement meme lorsqu'il n'y a rien a lire
+ou que l'ecriture n'est pas possible.
+
+
+
+fonction bind :
+
+associe une adresse et un port a une socket (fd).
+l'adresse c'est soit IPV4, IPV6 ou le hostname.
+
+
+Active socket : cote client, etablie une connection TCP et 
+envoie un message ou une commande au server et peut recevoir
+une reponse.
+
+Passive socket : cote serveur, la socket ecoute et accepte des
+connections de clients entrante sur un port specifique, lorsque
+la connection est accepte, une nouvelle socket est cree pour 
+communiquer avec le client. La socket du serveur peut gerer plusieurs
+connection de clients simultanement, et manipuler les messages
+et commandes recus et les renvoyer vers des clients.
+
+
+fonction listen :
+
+Permet de rendre une socket passive, le 1er parametre c'est la
+socket ou le fd a rendre passif et le 2e parametre c'est le
+nombre maximum de requete de connections dans la file d'attente 
+de la socket (ici 4096).
+
+
+
+
+fonction poll :
+
+Cette fonction permet de verifier les evenements dans une liste
+de plusieurs fds. Le 3e parametre a -1 permet d'attendre jusqu'a
+ce qu'un evenement arrive ou que le signal passe a true. Cette
+fonction retourne le nombre de fds pour lesquels il y a eu un
+evenements, si il n'y a pas d'erreur et qu'il s'est passe 
+quelque chose.
+
+
+
+fonction accept :
+
+Cette fonction bloque jusqu'a ce qu'une requete de connexion
+soit recu, lorsque c'est fait, la fonction renvoie un fd qui
+represente la connexion avec le client.
+- Le 1er parametre c'est le fd de la socket passive qui ecoute
+les requetes de connexions.
+- Le 2e parametre c'est un pointeur d'une structure ou l'adresse
+de la connection client sera stocke et le port.
+- Le 3e parametre c'est la taille de la structure.
+
+
+
+fonction recv :
+
+Cette fonction permet de recevoir les donnees d'une socket client.
+Les donnes sont enregistree dans le tableau en precisant la
+taille du tableau pour le nombre maximum d'octet a renseigner
+moins 1. La fonction renvoie le nombre d'octet lus. Si la valeur
+de retour est inferieur a 0 c'est qu'il y a eu une erreur.
+
+
+
+
+On se connecte avec le client irssi comme ca : /connect localhost 8080 mdp
+
+Toutes ces infos sont ecris dans le fd de la maniere suivante :
+CAP LS
+PASS mdp
+NAME ...
+NICK ...
+
+Et elles seront parsee a chaque fois qu'un message sera envoye via le serveur,
+le message se sur-ajoutera aux informations presente au prealable.
+
+
+
+Pour le parsing :
+
+j'itere pour tout le buffer jusqu'au '\0'
+a l'interieur de la boucle j'itere jusqu'au '\n'
+et a l'interieur de cette boucle j'itere jusqu'au 1er espace en concatenant chaque caracteres
+a la chaine de caracteres
+et je rentre dans une fonction avec str, le compteur et le buffer pour effectuer tel ou tel
+comportement en fonction de la commande stockee dans str.
