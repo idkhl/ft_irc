@@ -25,7 +25,6 @@ class	Channel
 	private:
 		std::vector<Client>		_clients;
 		std::string			_name;
-		std::vector<pollfd>		_pollfds;
 		std::vector<int>		_adminFds;
 
 	public:

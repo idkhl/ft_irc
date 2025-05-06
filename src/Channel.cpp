@@ -2,15 +2,10 @@
 
 Channel::Channel(Client& client, const std::string& name) : _name(name)
 {
+	std::cout << &client << std::endl;
 	client.setAdmin(true);
 	_adminFds.push_back(client.getFd());
 	_clients.push_back(client);
-	pollfd clientFd = {
-		.fd = client.getFd(),
-		.events = POLLIN,
-		.revents = 0,
-	};
-	_pollfds.push_back(clientFd);
 }
 
 void	Channel::sendMessage(const std::string& message) const
@@ -22,12 +17,6 @@ void	Channel::sendMessage(const std::string& message) const
 void	Channel::join(Client& client)
 {
 	_clients.push_back(client);
-	pollfd clientFd = {
-		.fd = client.getFd(),
-		.events = POLLIN,
-		.revents = 0,
-	};
-	_pollfds.push_back(clientFd);
 }
 
 void	Channel::deleteClient(const int& fd)
@@ -37,14 +26,5 @@ void	Channel::deleteClient(const int& fd)
 	{
 		client->getChannel().clear();
 		_clients.erase(client);
-		std::vector<pollfd>::const_iterator it;
-		size_t i;
-		for (i = 0 ; i < _pollfds.size() ; i++)
-		{
-			if (_pollfds[i].fd == fd)
-				break;
-		}
-		if (i < _pollfds.size())
-			_pollfds.erase(_pollfds.begin() + i);
 	}
 }
