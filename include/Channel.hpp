@@ -27,6 +27,9 @@ class	Channel
 		std::string			_name;
 		std::vector<pollfd>		_pollfds;
 		std::vector<int>		_adminFds;
+		std::string				_topic;
+		std::vector<Client>		_invited;
+		bool					inviteMode;
 
 	public:
 						Channel(Client& client, const std::string& name);
@@ -46,4 +49,5 @@ class	Channel
 		void				sendMessage(const std::string& message) const;
 		void				join(Client& client);
 		void				deleteClient(const int& fd);
+		void				setInviteMode(bool mode) { inviteMode = mode; }
 };

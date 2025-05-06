@@ -49,8 +49,14 @@ class	Server
 		void	pass(const int& fd, const std::vector<std::string>& input);
 		void	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
+		void	topic(const int&fd, const std::vector<std::string>& input);
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
+
+		void	mode(const int&fd, const std::vector<std::string>& input);
+		void	parseModes(const int& fd, const std::vector<std::string>& input);
+		void	checkModes(const int& fd, std::string input);
+		void	addInvite(const int& fd);
 
 		static void SignalHandler(int signum);
 	

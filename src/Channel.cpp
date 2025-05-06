@@ -1,6 +1,6 @@
 #include "../include/Channel.hpp"
 
-Channel::Channel(Client& client, const std::string& name) : _name(name)
+Channel::Channel(Client& client, const std::string& name) : _name(name), _topic(NULL)
 {
 	client.setAdmin(true);
 	_adminFds.push_back(client.getFd());
