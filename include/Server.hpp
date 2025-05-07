@@ -35,6 +35,7 @@ class	Server
 		~Server(void) { CloseFds(); }
 
 		std::vector<Client>::iterator	getClient(const int& fd) { return std::find(clients.begin(), clients.end(), fd); }
+		std::vector<Client>::iterator	getClient(const std::string& userName) { return std::find(clients.begin(), clients.end(), userName); }
 		std::vector<Channel>::iterator	getChannel(const std::string& channel) { return std::find(_channels.begin(), _channels.end(), channel); }
 
 		void ServerInit(int port, char *mdp);
@@ -50,7 +51,7 @@ class	Server
 		void	pass(const int& fd, const std::vector<std::string>& input);
 		void	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
-		void	kick(const int& fd, const std::string& user);
+		void	kick(const int& fd, const std::vector<std::string>& userToKick);
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
 

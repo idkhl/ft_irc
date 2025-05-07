@@ -97,8 +97,8 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 		join(fd, input);
 	else if (cmd == "/PART")
 		part(fd);
-	else if (cmd == "/ADMIN")
-		std::cout << getClient(fd)->isAdmin() << std::endl;
+	else if (cmd == "/KICK")
+		kick(fd, input);
 }
 
 std::string	Server::constructMessage(const int& fd, const char *buff)

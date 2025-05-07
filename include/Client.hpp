@@ -38,4 +38,5 @@ class Client
 
 		bool 			operator==(const Client& client) const { return Fd == client.Fd; }
 		bool 			operator==(const int& fd) const { return Fd == fd; }
+		bool			operator==(const std::string& userName) const { return _user == userName; }
 };
