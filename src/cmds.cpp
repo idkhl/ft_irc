@@ -38,6 +38,10 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		getClient(fd)->setChannel(input[1]);
 		if (std::find(getChannel(input[1])->getAdmins().begin(), getChannel(input[1])->getAdmins().end(), fd) != getChannel(input[1])->getAdmins().end())
 			getClient(fd)->setAdmin(true);
+		if (getChannel(input[1])->getPassword().empty() == false)
+		{
+			messageFromServer(fd, std::string)
+		}
 		getChannel(input[1])->join(*getClient(fd));
 		std::cout << "Connected to channel " << input[1] << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + input[1] + "!\n"));

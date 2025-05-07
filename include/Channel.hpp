@@ -22,8 +22,8 @@
 class	Channel
 {
 	private:
-		std::vector<Client *>		_clients;
-		std::string			_name;
+		std::vector<Client *>	_clients;
+		std::string				_name;
 		std::vector<int>		_adminFds;
 		std::string				_topic;
 		std::vector<Client>		_invited;
@@ -42,6 +42,7 @@ class	Channel
 		const std::string&		getName(void) const { return _name; }
 		Client				*getClient(const int& fd);
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
+		std::string&				getPassword() {return _password;}
 
 		void				setName(const std::string& name) { _name = name; }
 		void				setInviteMode(bool mode) { _inviteMode = mode; }

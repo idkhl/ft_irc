@@ -28,26 +28,26 @@ void	Server::addTopicRestriction(const int& fd)
     }
 }
 
-// void	Server::addPassword(const int& fd, std::vector<std::string>& input)
-// {
-//     if (input.empty())
-//     {
-//         std::cout << "No password provided." << std::endl;
-//         return;
-//     }
+void	Server::addPassword(const int& fd, std::vector<std::string>& input)
+{
+    if (input.empty())
+    {
+        std::cout << "No password provided." << std::endl;
+        return;
+    }
 
-// 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
-//     if (channel != _channels.end())
-//     {
-//         channel->setPassword(input[0]);
-//         std::cout << "Channel password has been changed" << channel->getName() << std::endl;
-//     }
-//     else
-//     {
-//         std::cout << "Channel not found for client." << std::endl;
-//     }
-// 	(void)fd;
-// }
+	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+    if (channel != _channels.end())
+    {
+        channel->setPassword(input[0]);
+        std::cout << "Channel password has been changed" << channel->getName() << std::endl;
+    }
+    else
+    {
+        std::cout << "Channel not found for client." << std::endl;
+    }
+	(void)fd;
+}
 
 void	Server::checkModes(const int& fd, std::string str, const std::vector<std::string> input)
 {
@@ -79,8 +79,8 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
                     addInvite(fd);
                 if (str[i] == 't')
                     addTopicRestriction(fd);
-                // if (str[i] == 'k')
-                //     addPassword(fd, modifiedInput);
+                if (str[i] == 'k')
+                    addPassword(fd, modifiedInput);
                 i++;
             }
         }
