@@ -18,7 +18,6 @@
 #include <cstdlib>
 #include "Client.hpp"
 #include "Colors.h"
-#include "tools.hpp"
 
 class	Channel
 {

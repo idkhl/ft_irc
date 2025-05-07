@@ -79,99 +79,6 @@ void Server::AcceptIncomingClient()
 	std::cout << GREEN << "Client <" << incofd << "> Connected" << WHITE << std::endl;
 }
 
-void	Server::nick(const int& fd, const std::vector<std::string>& input)
-{
-	if (getClient(fd)->isAllowed() == false)
-	{
-		std::cout << "You have to enter the password first" << std::endl;
-		return;
-	}
-	if (input.size() == 1)
-		return;
-	std::vector<Client>::iterator client = getClient(fd); 
-	if (client != clients.end())
-	{
-		client->setNick(input[1]);
-		std::cout << "Nick name set to " << input[1] << std::endl;
-	}
-}
-
-void	Server::user(const int& fd, const std::vector<std::string>& input)
-{
-	if (getClient(fd)->isAllowed() == false)
-	{
-		std::cout << "You have to enter the password first" << std::endl;
-		return;
-	}
-	if (input.size() == 1)
-		return;
-	std::vector<Client>::iterator client = getClient(fd);
-	if (client != clients.end())
-	{
-		client->setUser(input[1]);
-		std::cout << "User name set to " << input[1] << std::endl;
-	}
-}
-
-void	Server::pass(const int& fd, const std::vector<std::string>& input)
-{
-	if (input.size() == 1)
-		return;
-	if (strcmp(input[1].c_str(), Mdp))
-		std::cout << "Wrong password" << std::endl;
-	else
-	{
-		std::cout << "Good password" << std::endl;
-		getClient(fd)->setAuthorization(true);
-	}
-}
-
-void	Server::quit(const int& fd)
-{
-	ClearClients(fd);
-}
-
-void	Server::join(const int& fd, const std::vector<std::string>& input)
-{
-	if (getClient(fd)->isAllowed() == false)
-	{
-		std::cout << "You have to enter the password first" << std::endl;
-		return;
-	}
-	if (input.size() == 1)
-		return;
-	if (getChannel(input[1]) == _channels.end())
-	{
-		if (getClient(fd)->getChannel().empty() == false)
-			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
-		getClient(fd)->setChannel(input[1]);
-		_channels.push_back(Channel(*getClient(fd), input[1]));
-		std::cout << "Channel " << input[1] << " created!" << std::endl;
-	}
-	else
-	{
-		if (getClient(fd)->getChannel().empty() == false)
-			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
-		getClient(fd)->setChannel(input[1]);
-		if (std::find(getChannel(input[1])->getAdmins().begin(), getChannel(input[1])->getAdmins().end(), fd) != getChannel(input[1])->getAdmins().end())
-			getClient(fd)->setAdmin(true);
-		getChannel(input[1])->join(*getClient(fd));
-		std::cout << "Connected to channel " << input[1] << "!" << std::endl;
-	}
-}
-
-void	Server::part(const int& fd)
-{
-	if (getClient(fd)->isAllowed() == false)
-	{
-		std::cout << "You have to enter the password first" << std::endl;
-		return;
-	}
-	if (getClient(fd)->getChannel().empty())
-		return;
-	getChannel(getClient(fd)->getChannel())->deleteClient(fd);
-}
-
 void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 {
 	std::string cmd = input[0];
@@ -211,6 +118,32 @@ void	Server::broadcastToChannel(const int& fd, const std::string& message)
 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
 	if (channel != _channels.end())
 		channel->sendMessage(message);
+}
+
+static std::vector<std::string>	splitInput(std::string str)
+{
+	bool flag = false;
+	for (size_t i = 0 ; i < str.size() ; i++)
+	{
+		if (str[i] == '\n')
+			str[i] = ' ';
+	}
+	for (size_t i = 0 ; i < str.size() ; i++)
+	{
+		if (str[i] != ' ')
+			flag = true;
+		if (str[i] == ' ' && flag)
+			str[i] = 0;
+	}
+	std::vector<std::string> result;
+	for (size_t i = 0 ; i < str.size() ; i++)
+	{
+		if (i == 0 && str[i])
+			result.push_back(std::string(&str[i]));
+		else if (str[i] && !str[i - 1])
+			result.push_back(std::string(&str[i]));
+	}
+	return result;
 }
 
 int Server::ParseData(int fd, char *buff)

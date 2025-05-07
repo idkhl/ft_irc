@@ -39,6 +39,7 @@ class	Server
 
 		void ServerInit(int port, char *mdp);
 		void SerSocket();
+		void	messageFromServer(const int& fd, const std::string& message) const { send(fd, message.c_str(), message.size(), 0); }
 		void AcceptIncomingClient();
 		void ReceiveDataClient(int fd);
 		int	ParseData(int fd, char *buff);
@@ -49,6 +50,7 @@ class	Server
 		void	pass(const int& fd, const std::vector<std::string>& input);
 		void	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
+		void	kick(const int& fd, const std::string& user);
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
 

@@ -34,6 +34,7 @@ class Client
 		void			setAuthorization(const bool& allowed) { _allowed = allowed; }
 		void			setAdmin(const bool& admin) { _admin = admin; }
 		void			setChannel(const std::string& channel) { _channel = channel; }
+		void			setConnexion(const bool& connected) { this->connected = connected; }
 
 		bool 			operator==(const Client& client) const { return Fd == client.Fd; }
 		bool 			operator==(const int& fd) const { return Fd == fd; }
