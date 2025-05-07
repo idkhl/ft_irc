@@ -53,8 +53,16 @@ class	Server
 		void	part(const int& fd);
 		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
 		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
+		void	topic(const int&fd, const std::vector<std::string>& input);
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
+
+		void	mode(const int&fd, const std::vector<std::string>& input);
+		void	parseModes(const int& fd, const std::vector<std::string>& input);
+		void	checkModes(const int& fd, std::string str, const std::vector<std::string> input);
+		void	addInvite(const int& fd);
+		void	addTopicRestriction(const int& fd);
+		void	addPassword(const int& fd, std::vector<std::string>& input);
 
 		static void SignalHandler(int signum);
 	

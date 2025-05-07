@@ -101,6 +101,10 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 		kick(fd, input);
 	else if (cmd == "/INVITE")
 		invite(fd, input);
+	else if (cmd == "/MODE")
+		mode(fd, input);
+	// else if (cmd == "TOPIC")
+	// 	topic(fd, input);
 }
 
 std::string	Server::constructMessage(const int& fd, const char *buff)
