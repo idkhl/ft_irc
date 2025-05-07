@@ -98,20 +98,23 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 		getClient(fd)->setAuthorization(true);
 }
 
-void	Server::kick(const int& fd, const std::vector<std::string>& userToKick)
+void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)
 {
-	if (userToKick.size() == 1)
+	if (usersToKick.size() == 1)
 		return;
 	if (getClient(fd)->isAdmin() == false)
 	{
 		messageFromServer(fd, "You do not have the right to kick someone\n");
 		return;
 	}
-	if (getClient(userToKick[1]) == clients.end() || getClient(userToKick[1])->getChannel() != getClient(fd)->getChannel())
+	for (size_t i = 1 ; i < usersToKick.size() ; i++)
 	{
-		messageFromServer(fd, "There is no user named " + userToKick[1] + " in your channel\n");
-		return;
+		if (getClient(usersToKick[i]) == clients.end() || getClient(usersToKick[i])->getChannel() != getClient(fd)->getChannel())
+			messageFromServer(fd, "There is no user named " + usersToKick[i] + " in your channel\n");
+		else
+		{
+			part(getClient(usersToKick[i])->getFd());
+			messageFromServer(fd, "You kicked " + usersToKick[i] + " form the channel " + getClient(fd)->getChannel() + "\n");
+		}
 	}
-	part(getClient(userToKick[1])->getFd());
-	messageFromServer(fd, "You kicked " + userToKick[1] + " form the channel " + getClient(fd)->getChannel());
 }
