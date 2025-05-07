@@ -30,6 +30,7 @@ class	Channel
 		std::string				_password;
 		bool					_inviteMode;
 		bool					_topicRestriction;
+		size_t					_clientLimit;
 
 	public:
 						Channel(Client& client, const std::string& name);
@@ -39,15 +40,17 @@ class	Channel
 		bool				operator==(const std::string& name) const { return _name == name ? true : false; }
 		bool				operator!=(const std::string& name) const { return _name != name ? true : false; }
 
-		const std::string&		getName(void) const { return _name; }
-		Client				*getClient(const int& fd);
+		const std::string&			getName(void) const { return _name; }
+		Client						*getClient(const int& fd);
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
 		std::string&				getPassword() {return _password;}
+		size_t 						getClientCount() const { return _clients.size(); }
 
 		void				setName(const std::string& name) { _name = name; }
 		void				setInviteMode(bool mode) { _inviteMode = mode; }
 		void				setTopicRestriction(bool mode) { _topicRestriction = mode; };
 		void 				setPassword(std::string pass) {_password = pass; }
+		void				setClientLimit(size_t limit) {_clientLimit = limit;}
 		void				sendMessage(const std::string& message) const;
 		void				join(Client& client);
 		void				deleteClient(const int& fd);

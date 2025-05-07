@@ -1,4 +1,24 @@
 #include "../include/Server.hpp"
+#include <limits>
+#include <algorithm>
+
+int Server::checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input)
+{
+    std::string password;
+    if (getChannel(channel)->getPassword().empty() == false)
+    {
+        messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));
+
+        if (strcmp(password.c_str(), (getChannel(channel)->getPassword()).c_str()) != 0)
+        {
+            std::cout << "Wrong password" << std::endl;
+			std::cout << password << std::endl;
+            messageFromServer(fd, "Wrong password!\n");
+            return -1;
+        }
+    }
+    return 0;
+}
 
 void	Server::addInvite(const int& fd)
 {
@@ -40,13 +60,32 @@ void	Server::addPassword(const int& fd, std::vector<std::string>& input)
     if (channel != _channels.end())
     {
         channel->setPassword(input[0]);
-        std::cout << "Channel password has been changed" << channel->getName() << std::endl;
+        std::cout << "Channel password has been changed for" << channel->getName() << std::endl;
     }
     else
     {
         std::cout << "Channel not found for client." << std::endl;
     }
+	for (size_t i = 1; i < input.size(); i++)
+    {
+        if (input[i][0] != '+' && input[i][0] != '-')
+        {
+            input.push_back(input[i]);
+        }
+    }
 	(void)fd;
+}
+
+void	Server::addOperator(const int& fd, std::vector<std::string>& input)
+{
+	getChannel(getClient(fd)->getChannel())->setAdmins();
+}
+
+void	Server::addUserLimit(const int& fd, std::vector<std::string>& input)
+{
+	size_t limit;
+	limit = strtod(input[0]);
+	getChannel(getClient(fd)->getChannel())->setClientLimit(limit);
 }
 
 void	Server::checkModes(const int& fd, std::string str, const std::vector<std::string> input)
@@ -81,6 +120,10 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
                     addTopicRestriction(fd);
                 if (str[i] == 'k')
                     addPassword(fd, modifiedInput);
+				if (str[i] == 'o')
+					addOperator(fd, modifiedInput);
+				if (str[i] == 'l')
+					addUserLimit(fd, modifiedInput);
                 i++;
             }
         }
