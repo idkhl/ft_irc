@@ -142,12 +142,16 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		return;
 	if (getChannel(input[1]) == _channels.end())
 	{
+		if (getClient(fd)->getChannel().empty() == false)
+			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
 		getClient(fd)->setChannel(input[1]);
 		_channels.push_back(Channel(*getClient(fd), input[1]));
 		std::cout << "Channel " << input[1] << " created!" << std::endl;
 	}
 	else
 	{
+		if (getClient(fd)->getChannel().empty() == false)
+			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
 		getClient(fd)->setChannel(input[1]);
 		if (std::find(getChannel(input[1])->getAdmins().begin(), getChannel(input[1])->getAdmins().end(), fd) != getChannel(input[1])->getAdmins().end())
 			getClient(fd)->setAdmin(true);
