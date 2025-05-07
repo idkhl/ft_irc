@@ -33,6 +33,11 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	}
 	else
 	{
+		if (getChannel(input[1])->isInviteOnly() && !getClient(fd)->isInvitedIn(input[1]))
+		{
+			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
+			return;
+		}
 		if (getClient(fd)->getChannel().empty() == false)
 			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
 		getClient(fd)->setChannel(input[1]);

@@ -5,6 +5,8 @@ Channel::Channel(Client& client, const std::string& name) : _name(name)
 	client.setAdmin(true);
 	_adminFds.push_back(client.getFd());
 	_clients.push_back(&client);
+	_topicRestriction = false;
+	_inviteMode = false;
 }
 
 void	Channel::sendMessage(const std::string& message) const
