@@ -168,65 +168,6 @@ void	Server::part(const int& fd)
 	getChannel(getClient(fd)->getChannel())->deleteClient(fd);
 }
 
-void	Server::addInvite(const int& fd)
-{
-    std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
-    if (channel != _channels.end())
-    {
-        channel->setInviteMode(true);
-        std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
-    }
-    else
-    {
-        std::cout << "Channel not found for client." << std::endl;
-    }
-}
-
-void	Server::checkModes(const int& fd, std::string input)
-{
-    for (size_t i = 0; i < input.length(); i++)
-    {
-        if (input[i] == '+')
-        {
-            i++;
-            while (i < input.length() && input[i] != '+' && input[i] != '-')
-            {
-                if (input[i] == 'i')
-                    addInvite(fd);
-                i++;
-            }
-        }
-    }
-}
-
-void	Server::parseModes(const int& fd, const std::vector<std::string>& input)
-{
-	for (size_t i = 1; i < input.size(); i++)
-	{
-		if (input[i][0] == '+' || input[i][0] == '-')
-			checkModes(fd, input[i]);
-	}
-}
-
-void	Server::mode(const int& fd, const std::vector<std::string>& input)
-{
-	if (getClient(fd)->isAllowed() == false)
-	{
-		std::cout << "You have to enter the password first" << std::endl;
-		return;
-	}
-	if (input.size() == 1)
-		return;
-	else
-		parseModes(fd, input);
-	// i: Set/remove Invite-only channel
-	// t: Set/remove the restrictions of the TOPIC command to channel
-	// operators
-	// k: Set/remove the channel key (password)
-	// o: Give/take channel operator privilege
-	// l: Set/remove the user limit to channel
-}
-
 void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 {
 	std::string cmd = input[0];

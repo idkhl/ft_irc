@@ -6,7 +6,8 @@ OBJS_DIR = obj
 
 SRCS =	src/Server.cpp \
 	src/main.cpp \
-	src/Channel.cpp
+	src/Channel.cpp \
+	src/Modes.cpp
 
 DEPS = $(OBJS:.o=.d)
 

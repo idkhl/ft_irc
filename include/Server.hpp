@@ -55,8 +55,10 @@ class	Server
 
 		void	mode(const int&fd, const std::vector<std::string>& input);
 		void	parseModes(const int& fd, const std::vector<std::string>& input);
-		void	checkModes(const int& fd, std::string input);
+		void	checkModes(const int& fd, std::string str, const std::vector<std::string> input);
 		void	addInvite(const int& fd);
+		void	addTopicRestriction(const int& fd);
+		void	addPassword(const int& fd, std::vector<std::string>& input);
 
 		static void SignalHandler(int signum);
 	
