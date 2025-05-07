@@ -35,10 +35,12 @@ class	Server
 		~Server(void) { CloseFds(); }
 
 		std::vector<Client>::iterator	getClient(const int& fd) { return std::find(clients.begin(), clients.end(), fd); }
+		std::vector<Client>::iterator	getClient(const std::string& userName) { return std::find(clients.begin(), clients.end(), userName); }
 		std::vector<Channel>::iterator	getChannel(const std::string& channel) { return std::find(_channels.begin(), _channels.end(), channel); }
 
 		void ServerInit(int port, char *mdp);
 		void SerSocket();
+		void	messageFromServer(const int& fd, const std::string& message) const { send(fd, message.c_str(), message.size(), 0); }
 		void AcceptIncomingClient();
 		void ReceiveDataClient(int fd);
 		int	ParseData(int fd, char *buff);
@@ -49,7 +51,8 @@ class	Server
 		void	pass(const int& fd, const std::vector<std::string>& input);
 		void	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
-		void	topic(const int&fd, const std::vector<std::string>& input);
+		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
+		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
 
