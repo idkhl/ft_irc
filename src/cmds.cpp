@@ -9,8 +9,8 @@ void	Server::part(const int& fd)
 	}
 	if (getClient(fd)->getChannel().empty())
 		return;
-	messageFromServer(fd, std::string("You left the channel " + getClient(fd)->getChannel() + "\n"));
 	getChannel(getClient(fd)->getChannel())->deleteClient(fd);
+	messageFromServer(fd, std::string("You left the channel " + getClient(fd)->getChannel() + "\n"));
 }
 
 void	Server::join(const int& fd, const std::vector<std::string>& input)
@@ -138,4 +138,21 @@ void	Server::invite(const int& fd, const std::vector<std::string>& usersToInvite
 			messageFromServer(fd, "You invited " + usersToInvite[i] + " to the channel " + getClient(fd)->getChannel() + "\n");
 		}
 	}
+}
+
+void	Server::topic(const int& fd, const std::vector<std::string>& input)
+{
+	if (getClient(fd)->getChannel().empty())
+		return;
+	if (input.size() == 1)
+	{
+		messageFromServer(fd, "The topic of the channel " + getClient(fd)->getChannel() + " is " + getChannel(getClient(fd)->getChannel())->getTopic() + "\n");
+		return;
+	}
+	if (!getClient(fd)->isAdmin() && getChannel(getClient(fd)->getChannel())->isTopicRestriction())
+	{
+		messageFromServer(fd, "You have to be an operator to change the topic\n");
+		return;
+	}
+	getChannel(getClient(fd)->getChannel())->setTopic(input[1]);
 }
