@@ -124,6 +124,16 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Good password" << std::endl;
 		getClient(fd)->setAuthorization(true);
 	}
+	std::string nick;
+	for(size_t i = 0; i < this->clients.size(); i++)
+	{
+		if (this->clients[i].getFd() == fd)
+			nick = this->clients[i].getNick();
+	}
+	std::string response = ":localhost 001 " + nick + " :Welcome to the IRC server\r\n"
+						   ":localhost 002 " + nick + " :Your host is localhost\r\n"
+						   ":localhost 003 " + nick + " :This server was created today\r\n";
+	send(fd, response.c_str(), response.length(), 0);
 }
 
 void	Server::quit(const int& fd)
@@ -222,7 +232,6 @@ void Server::ReceiveDataClient(int fd)
 	memset(buff, 0, sizeof(buff));
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
-
 	if(bytes <= 0)
 	{
 		std::cout << RED << "Client <" << fd << "> Disconnected" << WHITE << std::endl;
@@ -232,7 +241,8 @@ void Server::ReceiveDataClient(int fd)
 	else
 	{
 		buff[bytes] = '\0';
-		// std::cout << YEL << "Client <" << fd << "> Data: "<< std::endl << WHITE << buff;
+		std::cout << buff;
+		std::string nick;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		ParseData(fd, buff);
 	}
