@@ -99,6 +99,8 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 		part(fd);
 	else if (cmd == "/KICK")
 		kick(fd, input);
+	else if (cmd == "/INVITE")
+		invite(fd, input);
 }
 
 std::string	Server::constructMessage(const int& fd, const char *buff)

@@ -118,3 +118,24 @@ void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)
 		}
 	}
 }
+
+void	Server::invite(const int& fd, const std::vector<std::string>& usersToInvite)
+{
+	if (usersToInvite.size() == 1)
+		return;
+	if (getClient(fd)->isAdmin() == false)
+	{
+		messageFromServer(fd, "You do not have the right to invite someone\n");
+		return;
+	}
+	for (size_t i = 1 ; i < usersToInvite.size() ; i++)
+	{
+		if (getClient(usersToInvite[i]) == clients.end())
+			messageFromServer(fd, "There is no user named " + usersToInvite[i] + "\n");
+		else
+		{
+			getClient(usersToInvite[i])->addInvitation(getClient(fd)->getChannel());
+			messageFromServer(fd, "You invited " + usersToInvite[i] + " to the channel " + getClient(fd)->getChannel() + "\n");
+		}
+	}
+}
