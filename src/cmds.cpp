@@ -161,3 +161,27 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 	}
 	getChannel(getClient(fd)->getChannel())->setTopic(input[1]);
 }
+
+void	Server::msg(const int& fd, const std::vector<std::string>& input)
+{
+	if (getClient(fd)->isAllowed() == false)
+	{
+		messageFromServer(fd, "You have to enter the password, username and nickname first\n");
+		return;
+	}
+	if (input.size() <= 2)
+		return;
+	if (getClient(input[1]) == clients.end())
+	{
+		messageFromServer(fd, "There is no user named " + input[1] + '\n');
+		return;
+	}
+	std::string message;
+	for (size_t i = 2 ; i < input.size() ; i++)
+	{
+		message += input[i];
+		if (i != input.size() - 1)
+			message += ' ';
+	}
+	send(getClient(input[1])->getFd(), message.c_str(), message.size(), 0);
+}
