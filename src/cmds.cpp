@@ -184,5 +184,12 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 		if (i != input.size() - 1)
 			message += ' ';
 	}
-	send(getClient(input[1])->getFd(), message.c_str(), message.size(), 0);
+	messageFromServer(getClient(input[1])->getFd(), message);
+}
+
+void	Server::list(const int& fd)
+{
+	messageFromServer(fd, "List of the channels on the server:\n");
+	for (size_t i = 0 ; i < _channels.size() ; i++)
+		messageFromServer(fd, "- " + _channels[i].getName() + '\n');
 }

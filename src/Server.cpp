@@ -107,6 +107,8 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 		topic(fd, input);
 	else if (cmd == "/MSG")
 		msg(fd, input);
+	else if (cmd == "/LIST")
+		list(fd);
 }
 
 std::string	Server::constructMessage(const int& fd, const char *buff)
