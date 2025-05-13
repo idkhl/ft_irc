@@ -53,6 +53,8 @@ class	Server
 		void	part(const int& fd);
 		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
 		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
+		void	topic(const int& fd, const std::vector<std::string>& input);
+		void	msg(const int& fd, const std::vector<std::string>& input);
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
 

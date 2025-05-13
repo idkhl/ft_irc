@@ -22,30 +22,30 @@
 
 void	Server::addInvite(const int& fd)
 {
-    std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
-    if (channel != _channels.end())
-    {
-        channel->setInviteMode(true);
-        std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
-    }
-    else
-    {
-        std::cout << "Channel not found for client." << std::endl;
-    }
+	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+	if (channel != _channels.end())
+	{
+		channel->setInviteMode(true);
+		std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
+	}
+	else
+	{
+		std::cout << "Channel not found for client." << std::endl;
+	}
 }
 
 void	Server::addTopicRestriction(const int& fd)
 {
 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
-    if (channel != _channels.end())
-    {
-        channel->setTopicRestriction(true);
-        std::cout << "Topic change restriction enabled for channel: " << channel->getName() << std::endl;
-    }
-    else
-    {
-        std::cout << "Channel not found for client." << std::endl;
-    }
+	if (channel != _channels.end())
+	{
+		channel->setTopicRestriction(true);
+		std::cout << "Topic change restriction enabled for channel: " << channel->getName() << std::endl;
+	}
+	else
+	{
+		std::cout << "Channel not found for client." << std::endl;
+	}
 }
 
 void	Server::addPassword(const int& fd, std::vector<std::string>& input)
