@@ -2,24 +2,6 @@
 #include <limits>
 #include <algorithm>
 
-// int Server::checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input)
-// {
-//     std::string password;
-//     if (getChannel(channel)->getPassword().empty() == false)
-//     {
-//         messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));
-
-//         if (strcmp(password.c_str(), (getChannel(channel)->getPassword()).c_str()) != 0)
-//         {
-//             std::cout << "Wrong password" << std::endl;
-// 			std::cout << password << std::endl;
-//             messageFromServer(fd, "Wrong password!\n");
-//             return -1;
-//         }
-//     }
-//     return 0;
-// }
-
 void	Server::addInvite(const int& fd)
 {
 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());

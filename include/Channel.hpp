@@ -42,13 +42,13 @@ class	Channel
 		const std::string&			getName(void) const { return _name; }
 		Client						*getClient(const int& fd);
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
-		const std::string&		getTopic(void) const { return _topic; }
+		const std::string&			getTopic(void) const { return _topic; }
 		
-		const bool&			isInviteOnly(void) const { return _inviteMode; }
-		const bool&			isTopicRestriction(void) const { return _topicRestriction; }
+		const bool&					isInviteOnly(void) const { return _inviteMode; }
+		const bool&					isTopicRestriction(void) const { return _topicRestriction; }
 		std::string&				getPassword() {return _password;}
 		size_t 						getClientCount() const { return _clients.size(); }
-		size_t						getClientLimit(void) {return _clientLimit;}
+		size_t&						getClientLimit(void) {return _clientLimit;}
 
 		void				setName(const std::string& name) { _name = name; }
 		void				setInviteMode(bool mode) { _inviteMode = mode; }
