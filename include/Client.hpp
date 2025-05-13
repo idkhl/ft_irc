@@ -17,8 +17,8 @@ class Client
 		std::vector<std::string>	_invites;
 
 	public:
-						Client(const int& fd, const in_addr& sin_addr) : connected(false), _admin(false), Fd(fd), IPadd(inet_ntoa(sin_addr)), _allowed(false) {std::cout << "coucou" << std::endl;}
-						~Client(void) {std::cout << "bye" << std::endl;}
+						Client(const int& fd, const in_addr& sin_addr) : connected(false), _admin(false), Fd(fd), IPadd(inet_ntoa(sin_addr)), _allowed(false) {}
+						~Client(void) {}
 
 		const int& 			getFd(void) const { return Fd; }
 		const std::string&		getNick(void) const { return _nick; }

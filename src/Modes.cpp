@@ -2,23 +2,23 @@
 #include <limits>
 #include <algorithm>
 
-int Server::checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input)
-{
-    std::string password;
-    if (getChannel(channel)->getPassword().empty() == false)
-    {
-        messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));
+// int Server::checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input)
+// {
+//     std::string password;
+//     if (getChannel(channel)->getPassword().empty() == false)
+//     {
+//         messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));
 
-        if (strcmp(password.c_str(), (getChannel(channel)->getPassword()).c_str()) != 0)
-        {
-            std::cout << "Wrong password" << std::endl;
-			std::cout << password << std::endl;
-            messageFromServer(fd, "Wrong password!\n");
-            return -1;
-        }
-    }
-    return 0;
-}
+//         if (strcmp(password.c_str(), (getChannel(channel)->getPassword()).c_str()) != 0)
+//         {
+//             std::cout << "Wrong password" << std::endl;
+// 			std::cout << password << std::endl;
+//             messageFromServer(fd, "Wrong password!\n");
+//             return -1;
+//         }
+//     }
+//     return 0;
+// }
 
 void	Server::addInvite(const int& fd)
 {
@@ -60,7 +60,7 @@ void	Server::addPassword(const int& fd, std::vector<std::string>& input)
     if (channel != _channels.end())
     {
         channel->setPassword(input[0]);
-        std::cout << "Channel password has been changed for" << channel->getName() << std::endl;
+        std::cout << "Channel password has been changed for channel " << channel->getName() << " (" << input[0] << ")" << std::endl;
     }
     else
     {
@@ -76,16 +76,18 @@ void	Server::addPassword(const int& fd, std::vector<std::string>& input)
 	(void)fd;
 }
 
-void	Server::addOperator(const int& fd, std::vector<std::string>& input)
+void	Server::addOperator(std::vector<std::string>& input)
 {
-	getChannel(getClient(fd)->getChannel())->setAdmins();
+    getClient(input[0])->setAdmin(true);
+    std::cout << input[0] << " is now an operator" << std::endl;
 }
 
 void	Server::addUserLimit(const int& fd, std::vector<std::string>& input)
 {
 	size_t limit;
-	limit = strtod(input[0]);
+	limit = atoi(input[0].c_str());
 	getChannel(getClient(fd)->getChannel())->setClientLimit(limit);
+    std::cout << "Channel has been limited to " << input[0] << " users" << std::endl;
 }
 
 void	Server::checkModes(const int& fd, std::string str, const std::vector<std::string> input)
@@ -100,13 +102,6 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
         }
     }
 
-    std::cout << "Modified Input: ";
-    for (std::vector<std::string>::iterator it = modifiedInput.begin(); it != modifiedInput.end(); ++it)
-    {
-        std::cout << *it << " ";
-    }
-    std::cout << std::endl;
-
     for (size_t i = 0; i < str.length(); i++)
     {
         if (str[i] == '+')
@@ -114,16 +109,31 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
             i++;
             while (i < str.length() && str[i] != '+' && str[i] != '-')
             {
+				std::cout << "Modified Input: ";
+				for (std::vector<std::string>::iterator it = modifiedInput.begin(); it != modifiedInput.end(); ++it)
+				{
+					std::cout << *it << " ";
+				}
+				std::cout << std::endl;
                 if (str[i] == 'i')
                     addInvite(fd);
                 if (str[i] == 't')
                     addTopicRestriction(fd);
                 if (str[i] == 'k')
+                {
                     addPassword(fd, modifiedInput);
+                    modifiedInput.erase(modifiedInput.begin());
+                }
 				if (str[i] == 'o')
-					addOperator(fd, modifiedInput);
+                {
+					addOperator(modifiedInput);
+                    modifiedInput.erase(modifiedInput.begin());
+                }
 				if (str[i] == 'l')
+                {
 					addUserLimit(fd, modifiedInput);
+                    modifiedInput.erase(modifiedInput.begin());
+                }
                 i++;
             }
         }

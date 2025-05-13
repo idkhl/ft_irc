@@ -45,6 +45,7 @@ class	Channel
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
 		std::string&				getPassword() {return _password;}
 		size_t 						getClientCount() const { return _clients.size(); }
+		size_t						getClientLimit(void) {return _clientLimit;}
 
 		void				setName(const std::string& name) { _name = name; }
 		void				setInviteMode(bool mode) { _inviteMode = mode; }
