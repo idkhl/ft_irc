@@ -18,30 +18,39 @@
 #include <cstdlib>
 #include "Client.hpp"
 #include "Colors.h"
-#include "tools.hpp"
 
 class	Channel
 {
 	private:
-		std::vector<Client>		_clients;
+		std::vector<Client *>		_clients;
 		std::string			_name;
-		std::vector<pollfd>		_pollfds;
 		std::vector<int>		_adminFds;
+		std::string			_topic;
+		std::vector<Client>		_invited;
+		std::string			_password;
+		bool				_inviteMode;
+		bool				_topicRestriction;
 
 	public:
 						Channel(Client& client, const std::string& name);
 						~Channel(void) {}
-						Channel(const Channel& channel) : _clients(channel._clients), _name(channel._name) {}
 
-		Channel&			operator=(const Channel& channel) { (void)channel; return *this; }
 		bool				operator==(const std::string& name) const { return _name == name ? true : false; }
 		bool				operator!=(const std::string& name) const { return _name != name ? true : false; }
 
 		const std::string&		getName(void) const { return _name; }
-		std::vector<Client>::iterator	getClient(const int& fd) { return std::find(_clients.begin(), _clients.end(), fd); }
+		Client				*getClient(const int& fd);
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
+		const std::string&		getTopic(void) const { return _topic; }
+		
+		const bool&			isInviteOnly(void) const { return _inviteMode; }
+		const bool&			isTopicRestriction(void) const { return _topicRestriction; }
 
 		void				setName(const std::string& name) { _name = name; }
+		void				setInviteMode(bool mode) { _inviteMode = mode; }
+		void				setTopicRestriction(bool mode) { _topicRestriction = mode; };
+		void 				setPassword(std::string pass) { _password = pass; }
+		void				setTopic(const std::string& topic) { _topic = topic; }
 
 		void				sendMessage(const std::string& message) const;
 		void				join(Client& client);
