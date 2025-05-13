@@ -25,15 +25,12 @@ class	Channel
 		std::vector<Client *>	_clients;
 		std::string				_name;
 		std::vector<int>		_adminFds;
-		std::string			_topic;
+		std::string				_topic;
 		std::vector<Client>		_invited;
 		std::string				_password;
 		bool					_inviteMode;
 		bool					_topicRestriction;
 		size_t					_clientLimit;
-		std::string			_password;
-		bool				_inviteMode;
-		bool				_topicRestriction;
 
 	public:
 						Channel(Client& client, const std::string& name);
