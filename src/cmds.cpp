@@ -22,30 +22,31 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	}
 	if (input.size() == 1)
 		return;
-	if (getChannel(input[1]) == _channels.end())
+	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
+	if (getChannel(channelName) == _channels.end())
 	{
 		if (getClient(fd)->getChannel().empty() == false)
 			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
-		getClient(fd)->setChannel(input[1]);
-		_channels.push_back(Channel(*getClient(fd), input[1]));
-		std::cout << "Channel " << input[1] << " created!" << std::endl;
-		messageFromServer(fd, std::string("Channel " + input[1] + " created!\n"));
+		getClient(fd)->setChannel(channelName);
+		_channels.push_back(Channel(*getClient(fd), channelName));
+		std::cout << "Channel " << channelName << " created!" << std::endl;
+		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
 	}
 	else
 	{
-		if (getChannel(input[1])->isInviteOnly() && !getClient(fd)->isInvitedIn(input[1]))
+		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 		{
 			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
 			return;
 		}
 		if (getClient(fd)->getChannel().empty() == false)
 			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
-		getClient(fd)->setChannel(input[1]);
-		if (std::find(getChannel(input[1])->getAdmins().begin(), getChannel(input[1])->getAdmins().end(), fd) != getChannel(input[1])->getAdmins().end())
+		getClient(fd)->setChannel(channelName);
+		if (std::find(getChannel(channelName)->getAdmins().begin(), getChannel(channelName)->getAdmins().end(), fd) != getChannel(channelName)->getAdmins().end())
 			getClient(fd)->setAdmin(true);
-		getChannel(input[1])->join(*getClient(fd));
-		std::cout << "Connected to channel " << input[1] << "!" << std::endl;
-		messageFromServer(fd, std::string("Connected to channel " + input[1] + "!\n"));
+		getChannel(channelName)->join(*getClient(fd));
+		std::cout << "Connected to channel " << channelName << "!" << std::endl;
+		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
 }
 
