@@ -123,17 +123,17 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 	{
 		std::cout << "Good password" << std::endl;
 		getClient(fd)->setAuthorization(true);
+		std::string nick;
+		for(size_t i = 0; i < this->clients.size(); i++)
+		{
+			if (this->clients[i].getFd() == fd)
+				nick = this->clients[i].getNick();
+		}
+		std::string response = ":localhost 001 " + nick + " :Welcome to the IRC server\r\n"
+							":localhost 002 " + nick + " :Your host is localhost\r\n"
+							":localhost 003 " + nick + " :This server was created today\r\n";
+		send(fd, response.c_str(), response.length(), 0);
 	}
-	std::string nick;
-	for(size_t i = 0; i < this->clients.size(); i++)
-	{
-		if (this->clients[i].getFd() == fd)
-			nick = this->clients[i].getNick();
-	}
-	std::string response = ":localhost 001 " + nick + " :Welcome to the IRC server\r\n"
-						   ":localhost 002 " + nick + " :Your host is localhost\r\n"
-						   ":localhost 003 " + nick + " :This server was created today\r\n";
-	send(fd, response.c_str(), response.length(), 0);
 }
 
 void	Server::quit(const int& fd)
