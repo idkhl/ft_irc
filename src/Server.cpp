@@ -109,6 +109,8 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 		msg(fd, input);
 	else if (cmd == "/LIST")
 		list(fd);
+	else if (cmd == "/HELP")
+		help(fd);
 }
 
 std::string	Server::constructMessage(const int& fd, const char *buff)
@@ -130,9 +132,16 @@ void	Server::broadcastToChannel(const int& fd, const std::string& message)
 		channel->sendMessage(message);
 }
 
+static void	slideToTheLeft(std::string& str, const size_t& index)
+{
+	for (size_t i = index ; i < str.size() - 1 ; i++)
+		str[i] = str[i + 1];
+}
+
 static std::vector<std::string>	splitInput(std::string str)
 {
 	bool flag = false;
+	char inQuote = 0;
 	for (size_t i = 0 ; i < str.size() ; i++)
 	{
 		if (str[i] == '\n')
@@ -140,9 +149,19 @@ static std::vector<std::string>	splitInput(std::string str)
 	}
 	for (size_t i = 0 ; i < str.size() ; i++)
 	{
+		if (!inQuote && (str[i] == '\'' || str[i] == '"'))
+		{
+			inQuote = str[i];
+			slideToTheLeft(str, i);
+		}
+		else if (inQuote && str[i] == inQuote)
+		{
+			inQuote = 0;
+			slideToTheLeft(str, i);
+		}
 		if (str[i] != ' ')
 			flag = true;
-		if (str[i] == ' ' && flag)
+		if (str[i] == ' ' && flag && !inQuote)
 			str[i] = 0;
 	}
 	std::vector<std::string> result;

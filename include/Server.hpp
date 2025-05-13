@@ -56,6 +56,7 @@ class	Server
 		void	topic(const int& fd, const std::vector<std::string>& input);
 		void	msg(const int& fd, const std::vector<std::string>& input);
 		void	list(const int& fd);
+		void	help(const int& fd);
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
 

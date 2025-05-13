@@ -33,6 +33,7 @@ class	Channel
 
 	public:
 						Channel(Client& client, const std::string& name);
+						Channel(Client& client, const std::string& name, const std::string& topic);
 						~Channel(void) {}
 
 		bool				operator==(const std::string& name) const { return _name == name ? true : false; }
