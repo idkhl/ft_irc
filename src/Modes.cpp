@@ -35,7 +35,7 @@ int Server::checkChannelPassword(const int& fd, std::string channel, const std::
 
     if (getChannel(channel)->getPassword().empty() == false)
     {
-        messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));
+        // messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));
 
         if (strcmp(input[0].c_str(), (getChannel(channel)->getPassword()).c_str()) != 0)
         {

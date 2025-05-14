@@ -18,10 +18,10 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 	if (getClient(fd)->isAllowed() == false)
 	{
 		messageFromServer(fd, "You have to enter the password, username and nickname first\n");
-		return ""; // Return an empty string instead of NULL
+		return "";
 	}
 	if (input.size() == 1)
-		return ""; // Return an empty string instead of NULL
+		return "";
 	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
 	if (getChannel(channelName) == _channels.end())
 	{
@@ -37,12 +37,12 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 		{
 			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
-			return ""; // Return an empty string instead of NULL
+			return "";
 		}
 		if (getChannel(channelName)->getClientLimit() && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
 		{
 			messageFromServer(fd, "Channel's client limit has been reached\n");
-			return ""; // Return an empty string instead of NULL
+			return "";
 		}
 		if (getClient(fd)->getChannel().empty() == false)
 			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
