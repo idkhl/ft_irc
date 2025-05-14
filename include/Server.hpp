@@ -49,7 +49,7 @@ class	Server
 		void	user(const int& fd, const std::vector<std::string>& input);
 		void	quit(const int& fd);
 		void	pass(const int& fd, const std::vector<std::string>& input);
-		void	join(const int& fd, const std::vector<std::string>& input);
+		std::string	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
 		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
 		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
@@ -67,6 +67,8 @@ class	Server
 		int		checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
 		void	addOperator(std::vector<std::string>& input);
 		void	addUserLimit(const int& fd, std::vector<std::string>& input);
+
+		std::vector<std::string> getUserInput(const int& fd);
 
 		static void SignalHandler(int signum);
 	

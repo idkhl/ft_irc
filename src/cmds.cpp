@@ -13,15 +13,15 @@ void	Server::part(const int& fd)
 	messageFromServer(fd, std::string("You left the channel " + getClient(fd)->getChannel() + "\n"));
 }
 
-void	Server::join(const int& fd, const std::vector<std::string>& input)
+std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 {
 	if (getClient(fd)->isAllowed() == false)
 	{
 		messageFromServer(fd, "You have to enter the password, username and nickname first\n");
-		return;
+		return ""; // Return an empty string instead of NULL
 	}
 	if (input.size() == 1)
-		return;
+		return ""; // Return an empty string instead of NULL
 	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
 	if (getChannel(channelName) == _channels.end())
 	{
@@ -37,15 +37,17 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 		{
 			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
-			return;
+			return ""; // Return an empty string instead of NULL
 		}
 		if (getChannel(channelName)->getClientLimit() && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
 		{
 			messageFromServer(fd, "Channel's client limit has been reached\n");
-			return;
+			return ""; // Return an empty string instead of NULL
 		}
 		if (getClient(fd)->getChannel().empty() == false)
 			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
+		if (getChannel(channelName)->getPassword().empty() == false)
+			return channelName;
 		getClient(fd)->setChannel(channelName);
 		if (std::find(getChannel(channelName)->getAdmins().begin(), getChannel(channelName)->getAdmins().end(), fd) != getChannel(channelName)->getAdmins().end())
 			getClient(fd)->setAdmin(true);
@@ -53,6 +55,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
+	return channelName;
 }
 
 void	Server::quit(const int& fd)

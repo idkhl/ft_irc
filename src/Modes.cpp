@@ -30,6 +30,33 @@ void	Server::addTopicRestriction(const int& fd)
 	}
 }
 
+int Server::checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input)
+{
+
+    if (getChannel(channel)->getPassword().empty() == false)
+    {
+        messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));
+
+        if (strcmp(input[0].c_str(), (getChannel(channel)->getPassword()).c_str()) != 0)
+        {
+            std::cout << "Wrong password" << std::endl;
+			std::cout << input[0] << std::endl;
+            messageFromServer(fd, "Wrong password!\n");
+            return -1;
+        }
+        else
+        {
+            getClient(fd)->setChannel(channel);
+            if (std::find(getChannel(channel)->getAdmins().begin(), getChannel(channel)->getAdmins().end(), fd) != getChannel(channel)->getAdmins().end())
+                getClient(fd)->setAdmin(true);
+            getChannel(channel)->join(*getClient(fd));
+            std::cout << "Connected to channel " << channel << "!" << std::endl;
+            messageFromServer(fd, std::string("Connected to channel " + channel + "!\n"));
+        }
+    }
+    return 0;
+}
+
 void	Server::addPassword(const int& fd, std::vector<std::string>& input)
 {
     if (input.empty())
