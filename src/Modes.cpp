@@ -1,8 +1,8 @@
 #include "../include/Server.hpp"
 
-void	Server::addInvite(const int& fd)
+void	Server::addInvite(const int& fd, const std::string& channelName)
 {
-	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
 		channel->setInviteMode(true);
@@ -14,9 +14,9 @@ void	Server::addInvite(const int& fd)
 	}
 }
 
-void	Server::addTopicRestriction(const int& fd)
+void	Server::addTopicRestriction(const int& fd, const std::string& channelName)
 {
-	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
 		channel->setTopicRestriction(true);
@@ -49,7 +49,7 @@ void	Server::addTopicRestriction(const int& fd)
 // 	(void)fd;
 // }
 
-void	Server::checkModes(const int& fd, std::string str, const std::vector<std::string> input)
+void	Server::checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName)
 {
 	std::vector<std::string> modifiedInput;	
 	for (size_t i = 1; i < input.size(); i++)
@@ -73,9 +73,9 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
 			while (i < str.length() && str[i] != '+' && str[i] != '-')
 			{
 				if (str[i] == 'i')
-					addInvite(fd);
+					addInvite(fd, channelName);
 				if (str[i] == 't')
-					addTopicRestriction(fd);
+					addTopicRestriction(fd, channelName);
 				// if (str[i] == 'k')
 				//	addPassword(fd, modifiedInput);
 				i++;
@@ -84,12 +84,12 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
 	}
 }
 
-void	Server::parseModes(const int& fd, const std::vector<std::string>& input)
+void	Server::parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName)
 {
 	for (size_t i = 1; i < input.size(); i++)
 	{
 		if (input[i][0] == '+' || input[i][0] == '-')
-			checkModes(fd, input[i], input);
+			checkModes(fd, input[i], input, channelName);
 	}
 }
 
@@ -100,10 +100,16 @@ void	Server::mode(const int& fd, const std::vector<std::string>& input)
 		std::cout << "You have to enter the password first" << std::endl;
 		return;
 	}
-	if (input.size() == 1)
+	std::string channelName = input[1];
+	if (getChannel(channelName) == _channels.end())
+	{
+		messageFromServer(fd, "There is no channel named " + channelName + '\n');
+		return;
+	}
+	if (input.size() < 2)
 		return;
 	else
-		parseModes(fd, input);
+		parseModes(fd, input, channelName);
 	// i: Set/remove Invite-only channel
 	// t: Set/remove the restrictions of the TOPIC command to channel
 	// operators

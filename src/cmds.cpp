@@ -1,18 +1,5 @@
 #include "../include/Server.hpp"
 
-void	Server::part(const int& fd)
-{
-	if (getClient(fd)->isAllowed() == false)
-	{
-		messageFromServer(fd, "You have to enter the password, user and nickname first\n");
-		return;
-	}
-	if (getClient(fd)->getChannel().empty())
-		return;
-	getChannel(getClient(fd)->getChannel())->deleteClient(fd);
-	messageFromServer(fd, std::string("You left the channel " + getClient(fd)->getChannel() + "\n"));
-}
-
 void	Server::join(const int& fd, const std::vector<std::string>& input)
 {
 	if (getClient(fd)->isAllowed() == false)
@@ -37,7 +24,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	{
 		// if (getClient(fd)->getChannel().empty() == false)
 		// 	getChannel(getClient(fd)->getChannel())->deleteClient(fd);
-		getClient(fd)->setChannel(channelName);
+		getClient(fd)->addChannel(channelName);
 		_channels.push_back(input.size() > 2 ? Channel(*getClient(fd), channelName, topic) : Channel(*getClient(fd), channelName));
 		std::cout << "Channel " << channelName << " created!" << std::endl;
 		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
@@ -49,11 +36,12 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
 			return;
 		}
-		// if (getClient(fd)->getChannel().empty() == false)
-		// 	getChannel(getClient(fd)->getChannel())->deleteClient(fd);
-		getClient(fd)->setChannel(channelName);
-		if (std::find(getChannel(channelName)->getAdmins().begin(), getChannel(channelName)->getAdmins().end(), fd) != getChannel(channelName)->getAdmins().end())
-			getClient(fd)->setAdmin(true);
+		if (getChannel(channelName)->getClient(fd))
+		{
+			messageFromServer(fd, "Your are already in this channel\n");
+			return;
+		}
+		getClient(fd)->addChannel(channelName);
 		getChannel(channelName)->join(*getClient(fd));
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
@@ -119,54 +107,63 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 		getClient(fd)->setAuthorization(true);
 }
 
-void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)
+void	Server::kick(const int& fd, const std::vector<std::string>& input)
 {
 	if (getClient(fd)->isAllowed() == false)
 	{
 		messageFromServer(fd, "You have to enter the password, username and nickname first\n");
 		return;
 	}
-	if (usersToKick.size() == 1)
+	if (input.size() < 3)
 		return;
-	if (getClient(fd)->isAdmin() == false)
+	std::string channelName = input[1];
+	if (getChannel(channelName) == _channels.end())
+	{
+		messageFromServer(fd, "There is no channel named " + channelName + '\n');
+		return;
+	}
+ 	if (getClient(fd)->isAdmin(*getChannel(channelName)))
 	{
 		messageFromServer(fd, "You do not have the right to kick someone\n");
 		return;
 	}
-	for (size_t i = 1 ; i < usersToKick.size() ; i++)
+	for (size_t i = 2 ; i < input.size() ; i++)
 	{
-		if (getClient(usersToKick[i]) == clients.end() || getClient(usersToKick[i])->getChannel() != getClient(fd)->getChannel())
-			messageFromServer(fd, "There is no user named " + usersToKick[i] + " in your channel\n");
+		if (getClient(input[i]) == clients.end() || getClient(input[i])->isInChannel(channelName))
+			messageFromServer(fd, "There is no user named " + input[i] + " in your channel\n");
 		else
 		{
-			part(getClient(usersToKick[i])->getFd());
-			messageFromServer(fd, "You kicked " + usersToKick[i] + " form the channel " + getClient(fd)->getChannel() + "\n");
+			getClient(input[i])->deleteChannel(channelName);
+			getChannel(channelName)->deleteClient(getClient(input[i])->getFd());
+			getChannel(channelName)->deleteAdmin(getClient(input[i])->getFd());
+			messageFromServer(fd, "You kicked " + input[i] + " form the channel " + channelName + "\n");
 		}
 	}
 }
 
-void	Server::invite(const int& fd, const std::vector<std::string>& usersToInvite)
+void	Server::invite(const int& fd, const std::vector<std::string>& input)
 {
 	if (getClient(fd)->isAllowed() == false)
 	{
 		messageFromServer(fd, "You have to enter the password, username and nickname first\n");
 		return;
 	}
-	if (usersToInvite.size() == 1)
+	if (input.size() < 3)
 		return;
-	if (getClient(fd)->isAdmin() == false)
+	std::string channelName = input[1];
+	if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)
 	{
 		messageFromServer(fd, "You do not have the right to invite someone\n");
 		return;
 	}
-	for (size_t i = 1 ; i < usersToInvite.size() ; i++)
+	for (size_t i = 1 ; i < input.size() ; i++)
 	{
-		if (getClient(usersToInvite[i]) == clients.end())
-			messageFromServer(fd, "There is no user named " + usersToInvite[i] + "\n");
+		if (getClient(input[i]) == clients.end())
+			messageFromServer(fd, "There is no user named " + input[i] + "\n");
 		else
 		{
-			getClient(usersToInvite[i])->addInvitation(getClient(fd)->getChannel());
-			messageFromServer(fd, "You invited " + usersToInvite[i] + " to the channel " + getClient(fd)->getChannel() + "\n");
+			getClient(input[i])->addInvitation(channelName);
+			messageFromServer(fd, "You invited " + input[i] + " to the channel " + channelName + "\n");
 		}
 	}
 }
@@ -178,17 +175,18 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, "You have to enter the password, username and nickname first\n");
 		return;
 	}
-	if (getClient(fd)->getChannel().empty())
+	if (input.size() < 2)
 		return;
-	if (input.size() == 1)
+	std::string channelName = input[1];
+	if (input.size() == 2)
 	{
-		if (getChannel(getClient(fd)->getChannel())->getTopic().empty())
+		if (getChannel(channelName)->getTopic().empty())
 			messageFromServer(fd, "This channel has no topic\n");
 		else
-			messageFromServer(fd, "The topic of the channel " + getClient(fd)->getChannel() + " is " + getChannel(getClient(fd)->getChannel())->getTopic() + "\n");
+			messageFromServer(fd, "The topic of the channel " + channelName + " is " + getChannel(channelName)->getTopic() + "\n");
 		return;
 	}
-	if (!getClient(fd)->isAdmin() && getChannel(getClient(fd)->getChannel())->isTopicRestriction())
+	if (!getClient(fd)->isAdmin(*getChannel(channelName)) && getChannel(channelName)->isTopicRestriction())
 	{
 		messageFromServer(fd, "You have to be admin to change the topic\n");
 		return;
@@ -200,7 +198,7 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 		if (i != input.size() - 1)
 			topic += ' ';
 	}
-	getChannel(getClient(fd)->getChannel())->setTopic(topic);
+	getChannel(channelName)->setTopic(topic);
 }
 
 void	Server::msg(const int& fd, const std::vector<std::string>& input)

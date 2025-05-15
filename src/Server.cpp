@@ -95,8 +95,6 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 		quit(fd);
 	else if (cmd == "/JOIN")
 		join(fd, input);
-	else if (cmd == "/PART")
-		part(fd);
 	else if (cmd == "/KICK")
 		kick(fd, input);
 	else if (cmd == "/INVITE")
@@ -117,7 +115,7 @@ std::string	Server::constructMessage(const int& fd, const char *buff)
 {
 	std::string message;
 	message += '<';
-	getClient(fd)->isAdmin() ? message += '@' : message += ' ';
+	// getClient(fd)->isAdmin(*getChannel(getClient(fd)->getChannel())) ? message += '@' : message += ' ';
 	getClient(fd)->getNick().empty() ? message += getClient(fd)->getFd() : message += getClient(fd)->getNick();
 	message += "> ";
 	for (size_t i = 0 ; i < strlen(buff) ; i++)
@@ -125,12 +123,12 @@ std::string	Server::constructMessage(const int& fd, const char *buff)
 	return message;
 }
 
-void	Server::broadcastToChannel(const int& fd, const std::string& message)
-{
-	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
-	if (channel != _channels.end())
-		channel->sendMessage(message);
-}
+// void	Server::broadcastToChannel(const int& fd, const std::string& message)
+// {
+// 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+// 	if (channel != _channels.end())
+// 		channel->sendMessage(message);
+// }
 
 static void	slideToTheLeft(std::string& str, const size_t& index)
 {
@@ -179,8 +177,8 @@ int Server::ParseData(int fd, char *buff)
 {
 	if (buff[0] == '/')
 		handleCmd(fd, splitInput(buff));
-	else
-		broadcastToChannel(fd, constructMessage(fd, buff));
+	// else
+	// 	broadcastToChannel(fd, constructMessage(fd, buff));
 	return (0);
 }
 

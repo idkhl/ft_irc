@@ -41,6 +41,8 @@ class	Channel
 
 		const std::string&		getName(void) const { return _name; }
 		Client				*getClient(const int& fd);
+		Client				*getClient(const std::string& userName);
+
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
 		const std::string&		getTopic(void) const { return _topic; }
 		
@@ -54,6 +56,7 @@ class	Channel
 		void				setTopic(const std::string& topic) { _topic = topic; }
 
 		void				sendMessage(const std::string& message) const;
-		void				join(Client& client);
+		void				join(Client& client) { _clients.push_back(&client); }
 		void				deleteClient(const int& fd);
+		void				deleteAdmin(const int& fd);
 };

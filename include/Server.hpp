@@ -50,9 +50,8 @@ class	Server
 		void	quit(const int& fd);
 		void	pass(const int& fd, const std::vector<std::string>& input);
 		void	join(const int& fd, const std::vector<std::string>& input);
-		void	part(const int& fd);
-		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
-		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
+		void	kick(const int& fd, const std::vector<std::string>& input);
+		void	invite(const int& fd, const std::vector<std::string>& input);
 		void	topic(const int& fd, const std::vector<std::string>& input);
 		void	msg(const int& fd, const std::vector<std::string>& input);
 		void	list(const int& fd);
@@ -61,10 +60,10 @@ class	Server
 		void broadcastToChannel(const int& fd, const std::string& message);
 
 		void	mode(const int&fd, const std::vector<std::string>& input);
-		void	parseModes(const int& fd, const std::vector<std::string>& input);
-		void	checkModes(const int& fd, std::string str, const std::vector<std::string> input);
-		void	addInvite(const int& fd);
-		void	addTopicRestriction(const int& fd);
+		void	parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName);
+		void	checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName);
+		void	addInvite(const int& fd, const std::string& channelName);
+		void	addTopicRestriction(const int& fd, const std::string& channelName);
 		void	addPassword(const int& fd, std::vector<std::string>& input);
 
 		static void SignalHandler(int signum);
