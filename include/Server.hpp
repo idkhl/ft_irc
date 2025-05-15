@@ -60,10 +60,10 @@ class	Server
 		void broadcastToChannel(const int& fd, const std::string& message);
 
 		void	mode(const int&fd, const std::vector<std::string>& input);
-		void	parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName);
-		void	checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName);
-		void	addInvite(const int& fd, const std::string& channelName);
-		void	addTopicRestriction(const int& fd, const std::string& channelName);
+		void	parseModes(const std::vector<std::string>& input, const std::string& channelName);
+		void	checkModes(std::string str, const std::vector<std::string> input, const std::string& channelName);
+		void	addInvite(const std::string& channelName);
+		void	addTopicRestriction(const std::string& channelName);
 		void	addPassword(const int& fd, std::vector<std::string>& input);
 
 		static void SignalHandler(int signum);

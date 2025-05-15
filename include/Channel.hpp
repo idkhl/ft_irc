@@ -16,8 +16,9 @@
 #include <cctype>
 #include <cstring>
 #include <cstdlib>
-#include "Client.hpp"
 #include "Colors.h"
+
+class Client;
 
 class	Channel
 {

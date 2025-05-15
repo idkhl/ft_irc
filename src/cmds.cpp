@@ -156,7 +156,7 @@ void	Server::invite(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, "You do not have the right to invite someone\n");
 		return;
 	}
-	for (size_t i = 1 ; i < input.size() ; i++)
+	for (size_t i = 2 ; i < input.size() ; i++)
 	{
 		if (getClient(input[i]) == clients.end())
 			messageFromServer(fd, "There is no user named " + input[i] + "\n");
@@ -178,6 +178,11 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 	if (input.size() < 2)
 		return;
 	std::string channelName = input[1];
+	if (getChannel(channelName) == _channels.end())
+	{
+		messageFromServer(fd, "There is no channel named " + channelName + '\n');
+		return;
+	}
 	if (input.size() == 2)
 	{
 		if (getChannel(channelName)->getTopic().empty())
