@@ -2,13 +2,21 @@
 #include <limits>
 #include <algorithm>
 
-void	Server::addInvite(const int& fd)
+void	Server::addInvite(char sign, const int& fd)
 {
 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
 	if (channel != _channels.end())
 	{
-		channel->setInviteMode(true);
-		std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
+        if (sign == '+')
+        {
+            channel->setInviteMode(true);
+            std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
+        }
+        else
+        {
+            channel->setInviteMode(false);
+            std::cout << "Invite-only mode disabled for channel: " << channel->getName() << std::endl;
+        }
 	}
 	else
 	{
@@ -16,13 +24,21 @@ void	Server::addInvite(const int& fd)
 	}
 }
 
-void	Server::addTopicRestriction(const int& fd)
+void	Server::addTopicRestriction(char sign, const int& fd)
 {
 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
 	if (channel != _channels.end())
 	{
-		channel->setTopicRestriction(true);
-		std::cout << "Topic change restriction enabled for channel: " << channel->getName() << std::endl;
+        if (sign == '+')
+        {
+            channel->setTopicRestriction(true);
+            std::cout << "Topic change restriction enabled for channel: " << channel->getName() << std::endl;
+        }
+        else
+        {
+            channel->setTopicRestriction(false);
+            std::cout << "Topic change restriction disabled for channel: " << channel->getName() << std::endl;
+        }
 	}
 	else
 	{
@@ -57,17 +73,17 @@ int Server::checkChannelPassword(const int& fd, std::string channel, const std::
     return 0;
 }
 
-void	Server::addPassword(const int& fd, std::vector<std::string>& input)
+void	Server::addPassword(char sign, const int& fd, std::vector<std::string>& input)
 {
-    if (input.empty())
-    {
-        std::cout << "No password provided." << std::endl;
-        return;
-    }
-
-	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+    
+    std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
     if (channel != _channels.end())
     {
+        if (input.empty())
+        {
+            std::cout << "No password provided." << std::endl;
+            return;
+        }
         channel->setPassword(input[0]);
         std::cout << "Channel password has been changed for channel " << channel->getName() << " (" << input[0] << ")" << std::endl;
     }
@@ -75,23 +91,16 @@ void	Server::addPassword(const int& fd, std::vector<std::string>& input)
     {
         std::cout << "Channel not found for client." << std::endl;
     }
-	for (size_t i = 1; i < input.size(); i++)
-    {
-        if (input[i][0] != '+' && input[i][0] != '-')
-        {
-            input.push_back(input[i]);
-        }
-    }
 	(void)fd;
 }
 
-void	Server::addOperator(std::vector<std::string>& input)
+void	Server::addOperator(char sign, std::vector<std::string>& input)
 {
     getClient(input[0])->setAdmin(true);
     std::cout << input[0] << " is now an operator" << std::endl;
 }
 
-void	Server::addUserLimit(const int& fd, std::vector<std::string>& input)
+void	Server::addUserLimit(char sign, const int& fd, std::vector<std::string>& input)
 {
 	size_t limit;
 	limit = atoi(input[0].c_str());
@@ -113,8 +122,9 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
 
     for (size_t i = 0; i < str.length(); i++)
     {
-        if (str[i] == '+')
+        if (str[i] == '+' || str[i] == '-')
         {
+            char sign = str[i];
             i++;
             while (i < str.length() && str[i] != '+' && str[i] != '-')
             {
@@ -125,22 +135,22 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
 				}
 				std::cout << std::endl;
                 if (str[i] == 'i')
-                    addInvite(fd);
+                    addInvite(sign, fd);
                 if (str[i] == 't')
-                    addTopicRestriction(fd);
-                if (str[i] == 'k')
+                    addTopicRestriction(sign, fd);
+                if (str[i] == 'k' && !modifiedInput.empty())
                 {
-                    addPassword(fd, modifiedInput);
+                    addPassword(sign, fd, modifiedInput);
                     modifiedInput.erase(modifiedInput.begin());
                 }
-				if (str[i] == 'o')
+				if (str[i] == 'o' && !modifiedInput.empty())
                 {
-					addOperator(modifiedInput);
+					addOperator(sign, modifiedInput);
                     modifiedInput.erase(modifiedInput.begin());
                 }
-				if (str[i] == 'l')
+				if (str[i] == 'l' && !modifiedInput.empty())
                 {
-					addUserLimit(fd, modifiedInput);
+                    addUserLimit(sign, fd, modifiedInput);
                     modifiedInput.erase(modifiedInput.begin());
                 }
                 i++;

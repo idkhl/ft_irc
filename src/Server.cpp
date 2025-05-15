@@ -101,7 +101,7 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 
 		if (!getChannel(channelName)->getPassword().empty())
 		{
-			messageFromServer(fd, std::string("Please enter" + channelName + "'s password:\n"));
+			messageFromServer(fd, std::string("Please enter " + channelName + "'s password:\n"));
 			std::vector<std::string> passwordInput = getUserInput(fd);
 			if (passwordInput.empty() || checkChannelPassword(fd, channelName, passwordInput) == -1)
 			{
