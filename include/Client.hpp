@@ -12,12 +12,11 @@ class Client
 		bool				connected;
 		int				Fd;
 		std::string			IPadd;
-		bool				_allowed;
 		std::vector<std::string>	_invites;
 		std::vector<std::string>	_channels;
 
 	public:
-						Client(const int& fd, const in_addr& sin_addr) : connected(false), Fd(fd), IPadd(inet_ntoa(sin_addr)), _allowed(false) {}
+						Client(const int& fd, const in_addr& sin_addr) : connected(false), Fd(fd), IPadd(inet_ntoa(sin_addr)) {}
 						~Client(void) {}
 
 		const int& 			getFd(void) const { return Fd; }
@@ -26,7 +25,6 @@ class Client
 		const std::vector<std::string>&	getChannels(void) const { return _channels; }
 
 		const bool&			isConnected(void) const { return connected; }
-		const bool&			isAllowed(void) const { return _allowed; }
 		bool				isInvitedIn(const std::string& channel) const { return std::find(_invites.begin(), _invites.end(), channel) != _invites.end(); }
 		bool				isAdmin(const Channel& channel) const { return std::find(channel.getAdmins().begin(), channel.getAdmins().end(), Fd) == channel.getAdmins().end() ? false : true; }
 		bool				isInChannel(const std::string& channelName) const { return std::find(_channels.begin(), _channels.end(), channelName) != _channels.end() ? true : false; }
@@ -35,7 +33,6 @@ class Client
 		void				setNick(const std::string& nick) { _nick = nick; }
 		void				setUser(const std::string& user) { _user = user; }
 		void				setIpAdd(std::string ipadd) { IPadd = ipadd; }
-		void				setAuthorization(const bool& allowed) { _allowed = allowed; }
 		void				setConnexion(const bool& connected) { this->connected = connected; }
 
 		bool 				operator==(const Client& client) const { return Fd == client.Fd; }

@@ -92,28 +92,3 @@ void	Server::parseModes(const std::vector<std::string>& input, const std::string
 			checkModes(input[i], input, channelName);
 	}
 }
-
-void	Server::mode(const int& fd, const std::vector<std::string>& input)
-{
-	if (getClient(fd)->isAllowed() == false)
-	{
-		std::cout << "You have to enter the password first" << std::endl;
-		return;
-	}
-	std::string channelName = input[1];
-	if (getChannel(channelName) == _channels.end())
-	{
-		messageFromServer(fd, "There is no channel named " + channelName + '\n');
-		return;
-	}
-	if (input.size() < 2)
-		return;
-	else
-		parseModes(input, channelName);
-	// i: Set/remove Invite-only channel
-	// t: Set/remove the restrictions of the TOPIC command to channel
-	// operators
-	// k: Set/remove the channel key (password)
-	// o: Give/take channel operator privilege
-	// l: Set/remove the user limit to channel
-}
