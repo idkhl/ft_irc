@@ -2,6 +2,10 @@
 
 #include <iostream>
 #include <vector>
+#include "Server.hpp"
+
+#define NC 1
+#define IRSSI 2
 
 class Client
 {
@@ -11,6 +15,7 @@ class Client
 		bool				connected;
 		bool				_admin;
 		int				Fd;
+		int				interface;
 		std::string			IPadd;
 		bool				_allowed;
 		std::string			_channel;
@@ -24,6 +29,7 @@ class Client
 		const std::string&		getNick(void) const { return _nick; }
 		const std::string&		getUser(void) const { return _user; }
 		std::string&			getChannel(void) { return _channel; }
+		int						getInterface(void) { return interface; }
 
 		const bool&			isConnected(void) const { return connected; }
 		const bool&			isAdmin(void) const { return _admin; }
@@ -31,10 +37,11 @@ class Client
 		bool				isInvitedIn(const std::string& channel) const { return std::find(_invites.begin(), _invites.end(), channel) != _invites.end(); }
 
 		void				setFd(int fd){Fd = fd;}
+		void				setInterface(int interface) {this->interface = interface; }
 		void				setNick(const std::string& nick) { _nick = nick; }
 		void				setUser(const std::string& user) { _user = user; }
 		void				setIpAdd(std::string ipadd) { IPadd = ipadd; }
-		void				setAuthorization(const bool& allowed) { _allowed = allowed; }
+		void				setAuthorization(int fd, const bool& allowed);
 		void				setAdmin(const bool& admin) { _admin = admin; }
 		void				setChannel(const std::string& channel) { _channel = channel; }
 		void				setConnexion(const bool& connected) { this->connected = connected; }

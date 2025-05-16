@@ -8,7 +8,8 @@ SRCS =	src/Server.cpp \
 	src/main.cpp \
 	src/Channel.cpp \
 	src/Modes.cpp \
-	src/cmds.cpp
+	src/cmds.cpp \
+	src/Client.cpp
 
 DEPS = $(OBJS:.o=.d)
 

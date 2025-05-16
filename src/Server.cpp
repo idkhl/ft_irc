@@ -74,6 +74,7 @@ void Server::AcceptIncomingClient()
 	NewPoll.revents = 0;
 
 	Client client(incofd, cliadd.sin_addr);
+	client.setInterface(NC);
 	this->clients.push_back(client);
 	this->fds.push_back(NewPoll);
 	std::cout << GREEN << "Client <" << incofd << "> Connected" << WHITE << std::endl;
@@ -83,29 +84,32 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 {
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
-	if (cmd == "/CAP")
+	if (cmd == "/CAP" || (getClient(fd)->getInterface() == IRSSI && cmd == "CAP"))
 		return;
-	else if (cmd == "/PASS")
+	else if (cmd == "/PASS" || (getClient(fd)->getInterface() == IRSSI && cmd == "PASS"))
 		pass(fd, input);
-	else if (cmd == "/NICK")
+	else if (cmd == "/NICK" || (getClient(fd)->getInterface() == IRSSI && cmd == "NICK"))
 		nick(fd, input);
-	else if (cmd == "/USER")
+	else if (cmd == "/USER" || (getClient(fd)->getInterface() == IRSSI && cmd == "USER"))
 		user(fd, input);
-	else if (cmd == "/QUIT")
+	else if (cmd == "/QUIT" || (getClient(fd)->getInterface() == IRSSI && cmd == "QUIT"))
 		quit(fd);
-	else if (cmd == "/JOIN")
+	else if (cmd == "/JOIN" || (getClient(fd)->getInterface() == IRSSI && cmd == "JOIN"))
+	{
+		std::cout << "tes cmd" << std::endl;
 		join(fd, input);
-	else if (cmd == "/PART")
+	}
+	else if (cmd == "/PART" || (getClient(fd)->getInterface() == IRSSI && cmd == "PART"))
 		part(fd);
-	else if (cmd == "/KICK")
+	else if (cmd == "/KICK" || (getClient(fd)->getInterface() == IRSSI && cmd == "KICK"))
 		kick(fd, input);
-	else if (cmd == "/INVITE")
+	else if (cmd == "/INVITE" || (getClient(fd)->getInterface() == IRSSI && cmd == "INVITE"))
 		invite(fd, input);
-	else if (cmd == "/MODE")
+	else if (cmd == "/MODE" || (getClient(fd)->getInterface() == IRSSI && cmd == "MODE"))
 		mode(fd, input);
-	else if (cmd == "/TOPIC")
+	else if (cmd == "/TOPIC" || (getClient(fd)->getInterface() == IRSSI && cmd == "TOPIC"))
 		topic(fd, input);
-	else if (cmd == "/MSG")
+	else if (cmd == "/MSG" || (getClient(fd)->getInterface() == IRSSI && cmd == "MSG"))
 		msg(fd, input);
 }
 
@@ -156,10 +160,42 @@ static std::vector<std::string>	splitInput(std::string str)
 
 int Server::ParseData(int fd, char *buff)
 {
-	if (buff[0] == '/')
-		handleCmd(fd, splitInput(buff));
+	std::vector<std::string> cmds;
+	cmds.push_back("PASS");
+	cmds.push_back("NICK");
+	cmds.push_back("USER");
+	cmds.push_back("JOIN");
+	std::vector<std::string> input = splitInput(buff);
+	if (input[0][0] == '/')
+	{
+		if (std::find(cmds.begin(), cmds.end(), &(input[0].c_str()[1])) != cmds.end())
+			handleCmd(fd, input);
+		else
+			broadcastToChannel(fd, constructMessage(fd, buff));
+	}
 	else
-		broadcastToChannel(fd, constructMessage(fd, buff));
+	{
+		if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
+			handleCmd(fd, input);
+		else
+			broadcastToChannel(fd, constructMessage(fd, buff));
+	}
+	return (0);
+}
+
+int	detect_irssi(char *buff)
+{
+	std::string str;
+	std::string str2;
+	str2 = "CAP LS";
+	int i = 0;
+	while (buff[i] != '\n')
+	{
+		str[i] = buff[i];
+		i++;
+	}
+	if (str.find(str2, 0))
+		return (1);
 	return (0);
 }
 
@@ -178,7 +214,10 @@ void Server::ReceiveDataClient(int fd)
 	else
 	{
 		buff[bytes] = '\0';
-		std::cout << buff;
+		// std::cout << buff;
+		if (getClient(fd)->getInterface() == NC)
+			if (detect_irssi(buff))
+				getClient(fd)->setInterface(IRSSI);
 		std::string nick;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		ParseData(fd, buff);
@@ -242,4 +281,11 @@ void Server::ClearClients(int fd)
 			break;
 		}
 	}
+}
+
+void	reply(int fd, std::string code, std::string msg)
+{
+	std::string response = ":localhost " + code;
+	response += " " + msg + "\r\n";
+	send(fd, response.c_str(), response.length(), 0);
 }

@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include "../include/Client.hpp"
 
 void	Server::part(const int& fd)
 {
@@ -48,6 +49,12 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
+	if (getChannel(channelName)->getTopic().empty())
+		reply(fd, RPL_NOTOPIC, channelName + " :No topic is set");
+	else
+		reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
+	reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
+	reply(fd, RPL_ENDOFNAMES, channelName + " :End of user's list.");
 }
 
 void	Server::quit(const int& fd)
@@ -70,7 +77,9 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, "You are connected!\n");
 		getClient(fd)->setConnexion(true);
 		if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-			getClient(fd)->setAuthorization(true);
+		{	
+			getClient(fd)->setAuthorization(fd, true);
+		}
 	}
 }
 
@@ -86,7 +95,7 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
 	}
 	if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-		getClient(fd)->setAuthorization(true);
+		getClient(fd)->setAuthorization(fd, true);
 }
 
 void	Server::nick(const int& fd, const std::vector<std::string>& input)
@@ -101,7 +110,7 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Nick name set to " << input[1] << std::endl;
 	}
 	if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-		getClient(fd)->setAuthorization(true);
+		getClient(fd)->setAuthorization(fd, true);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)

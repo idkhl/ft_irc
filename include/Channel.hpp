@@ -19,6 +19,8 @@
 #include "Client.hpp"
 #include "Colors.h"
 
+class Client;
+
 class	Channel
 {
 	private:
