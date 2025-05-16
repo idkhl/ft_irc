@@ -213,7 +213,7 @@ void Server::ReceiveDataClient(int fd)
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
 
-	if(bytes <= 0)
+	if (bytes <= 0)
 	{
 		std::cout << RED << "Client <" << fd << "> Disconnected" << WHITE << std::endl;
 		ClearClients(fd);
