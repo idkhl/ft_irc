@@ -84,32 +84,32 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 {
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
-	if (cmd == "/CAP" || (getClient(fd)->getInterface() == IRSSI && cmd == "CAP"))
+	if (cmd == "/CAP")
 		return;
-	else if (cmd == "/PASS" || (getClient(fd)->getInterface() == IRSSI && cmd == "PASS"))
+	else if (cmd == "/PASS")
 		pass(fd, input);
-	else if (cmd == "/NICK" || (getClient(fd)->getInterface() == IRSSI && cmd == "NICK"))
+	else if (cmd == "/NICK" && getClient(fd)->isConnected() == true)
 		nick(fd, input);
-	else if (cmd == "/USER" || (getClient(fd)->getInterface() == IRSSI && cmd == "USER"))
+	else if (cmd == "/USER" && getClient(fd)->isConnected() == true)
 		user(fd, input);
-	else if (cmd == "/QUIT" || (getClient(fd)->getInterface() == IRSSI && cmd == "QUIT"))
+	else if (cmd == "/QUIT")
 		quit(fd);
-	else if (cmd == "/JOIN" || (getClient(fd)->getInterface() == IRSSI && cmd == "JOIN"))
+	else if (cmd == "/JOIN")
 	{
 		std::cout << "tes cmd" << std::endl;
 		join(fd, input);
 	}
-	else if (cmd == "/PART" || (getClient(fd)->getInterface() == IRSSI && cmd == "PART"))
+	else if (cmd == "/PART")
 		part(fd);
-	else if (cmd == "/KICK" || (getClient(fd)->getInterface() == IRSSI && cmd == "KICK"))
+	else if (cmd == "/KICK")
 		kick(fd, input);
-	else if (cmd == "/INVITE" || (getClient(fd)->getInterface() == IRSSI && cmd == "INVITE"))
+	else if (cmd == "/INVITE")
 		invite(fd, input);
-	else if (cmd == "/MODE" || (getClient(fd)->getInterface() == IRSSI && cmd == "MODE"))
+	else if (cmd == "/MODE")
 		mode(fd, input);
-	else if (cmd == "/TOPIC" || (getClient(fd)->getInterface() == IRSSI && cmd == "TOPIC"))
+	else if (cmd == "/TOPIC")
 		topic(fd, input);
-	else if (cmd == "/MSG" || (getClient(fd)->getInterface() == IRSSI && cmd == "MSG"))
+	else if (cmd == "/MSG")
 		msg(fd, input);
 }
 
@@ -161,25 +161,19 @@ static std::vector<std::string>	splitInput(std::string str)
 int Server::ParseData(int fd, char *buff)
 {
 	std::vector<std::string> cmds;
-	cmds.push_back("PASS");
-	cmds.push_back("NICK");
-	cmds.push_back("USER");
-	cmds.push_back("JOIN");
+	cmds.push_back("/PASS");
+	cmds.push_back("/NICK");
+	cmds.push_back("/USER");
+	cmds.push_back("/JOIN");
 	std::vector<std::string> input = splitInput(buff);
-	if (input[0][0] == '/')
-	{
-		if (std::find(cmds.begin(), cmds.end(), &(input[0].c_str()[1])) != cmds.end())
-			handleCmd(fd, input);
-		else
-			broadcastToChannel(fd, constructMessage(fd, buff));
-	}
+	std::cout << "buff : " << buff << std::endl;
+	if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
+		input[0] = "/" + input[0];
+	std::cout << "input : " << input[0] << std::endl;
+	if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
+		handleCmd(fd, input);
 	else
-	{
-		if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
-			handleCmd(fd, input);
-		else
-			broadcastToChannel(fd, constructMessage(fd, buff));
-	}
+		broadcastToChannel(fd, constructMessage(fd, buff));
 	return (0);
 }
 
