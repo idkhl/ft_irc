@@ -7,21 +7,19 @@ void	Server::addInvite(char sign, const std::string& channelName)
 	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
-        if (sign == '+')
-        {
-            channel->setInviteMode(true);
-            std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
-        }
-        else
-        {
-            channel->setInviteMode(false);
-            std::cout << "Invite-only mode disabled for channel: " << channel->getName() << std::endl;
-        }
+		if (sign == '+')
+		{
+			channel->setInviteMode(true);
+			std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
+		}
+		else
+		{
+			channel->setInviteMode(false);
+			std::cout << "Invite-only mode disabled for channel: " << channel->getName() << std::endl;
+		}
 	}
 	else
-	{
 		std::cout << "Channel not found for client." << std::endl;
-	}
 }
 
 void	Server::addTopicRestriction(char sign, const std::string& channelName)
@@ -29,131 +27,118 @@ void	Server::addTopicRestriction(char sign, const std::string& channelName)
 	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
-        if (sign == '+')
-        {
-            channel->setTopicRestriction(true);
-            std::cout << "Topic change restriction enabled for channel: " << channel->getName() << std::endl;
-        }
-        else
-        {
-            channel->setTopicRestriction(false);
-            std::cout << "Topic change restriction disabled for channel: " << channel->getName() << std::endl;
-        }
+		if (sign == '+')
+		{
+			channel->setTopicRestriction(true);
+			std::cout << "Topic change restriction enabled for channel: " << channel->getName() << std::endl;
+		}
+		else
+		{
+			channel->setTopicRestriction(false);
+			std::cout << "Topic change restriction disabled for channel: " << channel->getName() << std::endl;
+		}
 	}
 	else
-	{
 		std::cout << "Channel not found for client." << std::endl;
-	}
 }
 
-int Server::checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input)
+int	Server::checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input)
 {
 
-    if (getChannel(channel)->getPassword().empty() == false)
-    {
-        // messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));
-
-        if (strcmp(input[0].c_str(), (getChannel(channel)->getPassword()).c_str()) != 0)
-        {
-            std::cout << "Wrong password" << std::endl;
-			std::cout << input[0] << std::endl;
-            messageFromServer(fd, "Wrong password!\n");
-            return -1;
-        }
-        else
-        {
-            if (std::find(getChannel(channel)->getAdmins().begin(), getChannel(channel)->getAdmins().end(), fd) != getChannel(channel)->getAdmins().end())
-                getChannel(channel)->addAdmin(fd);
-            getChannel(channel)->join(*getClient(fd));
-            std::cout << "Connected to channel " << channel << "!" << std::endl;
-            messageFromServer(fd, std::string("Connected to channel " + channel + "!\n"));
-        }
-    }
-    return 0;
+	if (getChannel(channel)->getPassword().empty() == false)
+	{
+		// messageFromServer(fd, std::string("Please enter " + channel + "'s password\n"));	
+		if (strcmp(input[0].c_str(), (getChannel(channel)->getPassword()).c_str()) != 0)
+		{
+			std::cout << "Wrong password" << std::endl;				std::cout << input[0] << std::endl;
+			messageFromServer(fd, "Wrong password!\n");
+			return -1;
+		}
+		else
+		{
+			if (std::find(getChannel(channel)->getAdmins().begin(), getChannel(channel)->getAdmins().end(), fd) != getChannel(channel)->getAdmins().end())
+			    getChannel(channel)->addAdmin(fd);
+			getChannel(channel)->addClient(*getClient(fd));
+			std::cout << "Connected to channel " << channel << "!" << std::endl;
+			messageFromServer(fd, std::string("Connected to channel " + channel + "!\n"));
+		}
+	}
+	return 0;
 }
 
 void	Server::addPassword(char sign, const std::string& channelName, std::vector<std::string>& input)
 {
-    
-    std::vector<Channel>::iterator channel = getChannel(channelName);
-    if (channel != _channels.end())
-    {
-        if (sign == '+')
-        {
-            if (input.empty())
-            {
-                std::cout << "No password provided." << std::endl;
-                return;
-            }
-            channel->setPassword(input[0]);
-            std::cout << "Channel password has been changed for channel " << channel->getName() << " [" << input[0] << "]" << std::endl;
-        }
-        else
-        {
-            std::cout << sign << std::endl;
-            channel->setPassword("");
-            std::cout << "Channel password has been removed for channel " << channel->getName() << std::endl;
-            return;
-        }
-    }
-    else
-    {
-        std::cout << "Channel not found for client." << std::endl;
-    }
+	std::vector<Channel>::iterator channel = getChannel(channelName);
+	if (channel != _channels.end())
+	{
+		if (sign == '+')
+		{
+			if (input.empty())
+			{
+				std::cout << "No password provided." << std::endl;
+				return;
+			}
+			channel->setPassword(input[0]);
+			std::cout << "Channel password has been changed for channel " << channel->getName() << " [" << input[0] << "]" << std::endl;
+		}
+		else
+		{
+			std::cout << sign << std::endl;
+			channel->setPassword("");
+			std::cout << "Channel password has been removed for channel " << channel->getName() << std::endl;
+			return;
+		}
+	}
+	else
+		std::cout << "Channel not found for client." << std::endl;
 }
 
 void	Server::addOperator(char sign, const std::string& channelName, const int& fd, std::vector<std::string>& input)
 {
-    if (sign == '+')
-    {
-	getChannel(channelName)->addAdmin(fd);
-        std::cout << input[0] << " is now an operator" << std::endl;
-    }
-    else
-    {
-	getChannel(channelName)->deleteAdmin(fd);
-        std::cout << input[0] << " is not an operator anymore" << std::endl;
-    }
+	if (sign == '+')
+	{
+		getChannel(channelName)->addAdmin(fd);
+		std::cout << input[0] << " is now an operator" << std::endl;
+	}
+	else
+	{
+		getChannel(channelName)->deleteAdmin(fd);
+		std::cout << input[0] << " is not an operator anymore" << std::endl;
+	}
 }
 
 void	Server::addUserLimit(char sign, const std::string& channelName, std::vector<std::string>& input)
 {
-    if (sign == '+')
-    {
-        size_t limit;
-        limit = atoi(input[0].c_str());
-        if (limit > 0)
-        {
-            getChannel(channelName)->setClientLimit(limit);
-            std::cout << "Channel has been limited to " << input[0] << " users" << std::endl;
-        }
-        else
-        {
-            std::cout << "Please enter a valid number" << std::endl;
-        }
-    }
-    else
-    {
-        getChannel(channelName)->setClientLimit(-1);
-        std::cout << "Channel's user limit has been removed" << std::endl;
-    }
+	if (sign == '+')
+	{
+		size_t limit;
+		limit = atoi(input[0].c_str());
+		if (limit > 0)
+		{
+			getChannel(channelName)->setClientLimit(limit);
+			std::cout << "Channel has been limited to " << input[0] << " users" << std::endl;
+		}
+		else
+			std::cout << "Please enter a valid number" << std::endl;
+	}
+	else
+	{
+		getChannel(channelName)->setClientLimit(-1);
+		std::cout << "Channel's user limit has been removed" << std::endl;
+	}
 }
 
 void	Server::checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName)
 {
 	std::vector<std::string> modifiedInput;	
-	for (size_t i = 1; i < input.size(); i++)
+	for (size_t i = 2; i < input.size(); i++)
 	{
 		if (input[i][0] != '+' && input[i][0] != '-')
-		{
 			modifiedInput.push_back(input[i]);
-		}
 	}	
 	std::cout << "Modified Input: ";
 	for (std::vector<std::string>::iterator it = modifiedInput.begin(); it != modifiedInput.end(); ++it)
-	{
 		std::cout << *it << " ";
-	}
 	std::cout << std::endl;
 	for (size_t i = 0; i < str.length(); i++)
 	{
@@ -169,21 +154,21 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
 					addTopicRestriction(sign, channelName);
 				if (str[i] == 'k')
                 		{
-                		    addPassword(sign, channelName, modifiedInput);
-                		    if (!modifiedInput.empty())
-                		        modifiedInput.erase(modifiedInput.begin());
+                			addPassword(sign, channelName, modifiedInput);
+                			if (!modifiedInput.empty())
+                				modifiedInput.erase(modifiedInput.begin());
                 		}
-						if (str[i] == 'o')
+				if (str[i] == 'o')
                 		{
-							addOperator(sign, channelName, fd, modifiedInput);
-                		    if (!modifiedInput.empty())
-                		        modifiedInput.erase(modifiedInput.begin());
+					addOperator(sign, channelName, fd, modifiedInput);
+                			if (!modifiedInput.empty())
+                				modifiedInput.erase(modifiedInput.begin());
                 		}
-						if (str[i] == 'l')
+				if (str[i] == 'l')
                 		{
-                		    addUserLimit(sign, channelName, modifiedInput);
-                		    if (!modifiedInput.empty())
-                		        modifiedInput.erase(modifiedInput.begin());
+                			addUserLimit(sign, channelName, modifiedInput);
+                			if (!modifiedInput.empty())
+                				modifiedInput.erase(modifiedInput.begin());
                 		}
 				i++;
 			}

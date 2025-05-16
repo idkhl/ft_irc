@@ -22,8 +22,6 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 	}
 	if (getChannel(channelName) == _channels.end())
 	{
-		// if (getClient(fd)->getChannel().empty() == false)
-		// 	getChannel(getClient(fd)->getChannel())->deleteClient(fd);
 		getClient(fd)->addChannel(channelName);
 		_channels.push_back(input.size() > 2 ? Channel(*getClient(fd), channelName, topic) : Channel(*getClient(fd), channelName));
 		std::cout << "Channel " << channelName << " created!" << std::endl;
@@ -41,9 +39,7 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 			messageFromServer(fd, "Channel's client limit has been reached\n");
 			return "";
 		}
-		if (std::find(getChannel(channelName)->getAdmins().begin(), getChannel(channelName)->getAdmins().end(), fd) != getChannel(channelName)->getAdmins().end())
-			getChannel(channelName)->addAdmin(fd);
-		getChannel(channelName)->join(*getClient(fd));
+		getChannel(channelName)->addClient(*getClient(fd));
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
@@ -217,7 +213,7 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 	}
 	if (!getClient(fd)->isAdmin(*getChannel(channelName)) && getChannel(channelName)->isTopicRestriction())
 	{
-		messageFromServer(fd, "You have to be admin to change the topic\n");
+		messageFromServer(fd, "You have to be an operator to change the topic\n");
 		return;
 	}
 	std::string topic;
@@ -274,6 +270,11 @@ void	Server::mode(const int& fd, const std::vector<std::string>& input)
 		return;
 	}
 	std::string channelName = input[1];
+	if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)
+	{
+		messageFromServer(fd, "You have to be an operator to use /MODE\n");
+		return;
+	}
 	if (getChannel(channelName) == _channels.end())
 	{
 		messageFromServer(fd, "There is no channel named " + channelName + '\n');

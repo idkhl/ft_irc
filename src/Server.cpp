@@ -289,6 +289,23 @@ void Server::ServerInit(int port, char *mdp)
 void Server::ClearClients(int fd)
 {
 	std::cout << RED << "Client <" << fd << "> Disconnected" << WHITE << std::endl;
+	std::vector<Client>::iterator client = getClient(fd);
+	for (size_t i = 0 ; i < client->getChannels().size() ; i++)
+	{
+		std::vector<Channel>::iterator channel = getChannel(client->getChannels()[i]);
+		channel->deleteAdmin(fd);
+		channel->deleteClient(fd);
+		if (channel->getClientCount() == 0)
+		{
+			_channels.erase(channel);
+			return;
+		}
+		if (channel->getNbrAdmins() == 0)
+		{
+			channel->addAdmin(channel->getClients()[0]->getFd());
+			messageFromServer(channel->getClients()[0]->getFd(), "You have become an operator in channel " + channel->getName() + '\n');	
+		}
+	}
 	for(size_t i = 0; i < this->fds.size(); i++)
 	{
 		if (this->fds[i].fd == fd)

@@ -29,7 +29,6 @@ class Client
 		bool				isAdmin(const Channel& channel) const { return std::find(channel.getAdmins().begin(), channel.getAdmins().end(), Fd) == channel.getAdmins().end() ? false : true; }
 		bool				isInChannel(const std::string& channelName) const { return std::find(_channels.begin(), _channels.end(), channelName) != _channels.end() ? true : false; }
 
-		void				setFd(int fd){Fd = fd;}
 		void				setNick(const std::string& nick) { _nick = nick; }
 		void				setUser(const std::string& user) { _user = user; }
 		void				setIpAdd(std::string ipadd) { IPadd = ipadd; }

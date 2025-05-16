@@ -7,6 +7,7 @@ Channel::Channel(Client& client, const std::string& name) : _name(name)
 	_clients.push_back(&client);
 	_topicRestriction = false;
 	_inviteMode = false;
+	_clientLimit = -1;
 }
 
 Channel::Channel(Client& client, const std::string& name, const std::string& topic) :_name(name), _topic(topic)
@@ -26,30 +27,19 @@ void	Channel::sendMessage(const std::string& message) const
 
 void	Channel::deleteClient(const int& fd)
 {
-	Client *client = getClient(fd);
-	if (client != NULL)
+	std::vector<Client *>::iterator client = std::find(_clients.begin(),_clients.end(), getClient(fd));
+	if (client != _clients.end())
 	{
-		size_t i;
-		for (i = 0 ; i < _clients.size() ; i++)
-		{
-			if (_clients[i]->getFd() == fd)
-				break;
-		}
-		_clients.erase(_clients.begin() + i);
+		std::cout << "CHANNEL DELETED\n";
+		_clients.erase(client);
 	}
 }
 
 void	Channel::deleteAdmin(const int& fd)
 {
-	if (getAdmin(fd) == NULL)
-		return;
-	size_t i;
-	for (i = 0 ; i < _adminFds.size() ; i++)
-	{
-		if (_adminFds[i] == fd)
-			break;
-	}
-	_adminFds.erase(_adminFds.begin() + i);
+	std::vector<int>::iterator client = std::find(_adminFds.begin(),_adminFds.end(), getClient(fd)->getFd());
+	if (client != _adminFds.end())
+		_adminFds.erase(client);
 }
 
 Client	*Channel::getClient(const int& fd)

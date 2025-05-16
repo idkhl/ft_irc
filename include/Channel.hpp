@@ -47,12 +47,14 @@ class	Channel
 		Client			*getAdmin(const int& fd);
 		Client			*getAdmin(const std::string& userName);
 		const std::string&	getTopic(void) const { return _topic; }
-		
-		const bool&		isInviteOnly(void) const { return _inviteMode; }
-		const bool&		isTopicRestriction(void) const { return _topicRestriction; }
 		std::string&		getPassword() {return _password;}
 		size_t 			getClientCount() const { return _clients.size(); }
-		size_t&			getClientLimit(void) {return _clientLimit;}
+		const size_t&		getClientLimit(void) { return _clientLimit; }
+		size_t			getNbrAdmins(void) const { return _adminFds.size(); }
+		std::vector<Client *>	getClients(void) { return _clients; }
+		
+		const bool&		isTopicRestriction(void) const { return _topicRestriction; }
+		const bool&		isInviteOnly(void) const { return _inviteMode; }
 
 		void			setName(const std::string& name) { _name = name; }
 		void			setInviteMode(bool mode) { _inviteMode = mode; }
@@ -62,7 +64,6 @@ class	Channel
 		void			setClientLimit(size_t limit) {_clientLimit = limit;}
 		
 		void			sendMessage(const std::string& message) const;
-		void			join(Client& client) { _clients.push_back(&client); }
 		void			deleteClient(const int& fd);
 		void			addClient(Client &client);
 		void			deleteAdmin(const int& fd);
