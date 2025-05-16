@@ -1,6 +1,6 @@
 #include "../include/Server.hpp"
 
-void	Server::join(const int& fd, const std::vector<std::string>& input)
+std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 {
 	if (getClient(fd)->isConnected() == false)
 	{
@@ -8,7 +8,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		return;
 	}
 	if (input.size() == 1)
-		return;
+		return "";
 	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
 	std::string topic;
 	if (input.size() > 2)
@@ -34,18 +34,20 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 		{
 			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
-			return;
+			return "";
 		}
-		if (getChannel(channelName)->getClient(fd))
+		if (getChannel(channelName)->getClientLimit() > 0 && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
 		{
-			messageFromServer(fd, "Your are already in this channel\n");
-			return;
+			messageFromServer(fd, "Channel's client limit has been reached\n");
+			return "";
 		}
-		getClient(fd)->addChannel(channelName);
+		if (std::find(getChannel(channelName)->getAdmins().begin(), getChannel(channelName)->getAdmins().end(), fd) != getChannel(channelName)->getAdmins().end())
+			getChannel(channelName)->addAdmin(fd);
 		getChannel(channelName)->join(*getClient(fd));
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
+	return channelName;
 }
 
 void	Server::quit(const int& fd)
