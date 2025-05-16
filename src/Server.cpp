@@ -298,6 +298,7 @@ void Server::ClearClients(int fd)
 		if (channel->getClientCount() == 0)
 		{
 			_channels.erase(channel);
+			
 			return;
 		}
 		if (channel->getNbrAdmins() == 0)
