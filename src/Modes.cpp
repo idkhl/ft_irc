@@ -62,9 +62,8 @@ int Server::checkChannelPassword(const int& fd, std::string channel, const std::
         }
         else
         {
-            getClient(fd)->setChannel(channel);
             if (std::find(getChannel(channel)->getAdmins().begin(), getChannel(channel)->getAdmins().end(), fd) != getChannel(channel)->getAdmins().end())
-                getClient(fd)->setAdmin(true);
+                getChannel(channel)->addAdmin(fd);
             getChannel(channel)->join(*getClient(fd));
             std::cout << "Connected to channel " << channel << "!" << std::endl;
             messageFromServer(fd, std::string("Connected to channel " + channel + "!\n"));
@@ -73,10 +72,10 @@ int Server::checkChannelPassword(const int& fd, std::string channel, const std::
     return 0;
 }
 
-void	Server::addPassword(char sign, const int& fd, std::vector<std::string>& input)
+void	Server::addPassword(char sign, const std::string& channelName, std::vector<std::string>& input)
 {
     
-    std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+    std::vector<Channel>::iterator channel = getChannel(channelName);
     if (channel != _channels.end())
     {
         if (sign == '+')
@@ -165,12 +164,12 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
 			while (i < str.length() && str[i] != '+' && str[i] != '-')
 			{
 				if (str[i] == 'i')
-					addInvite(sign, fd);
+					addInvite(sign, channelName);
 				if (str[i] == 't')
-					addTopicRestriction(sign, fd);
+					addTopicRestriction(sign, channelName);
 				if (str[i] == 'k')
                 		{
-                		    addPassword(sign, fd, modifiedInput);
+                		    addPassword(sign, channelName, modifiedInput);
                 		    if (!modifiedInput.empty())
                 		        modifiedInput.erase(modifiedInput.begin());
                 		}

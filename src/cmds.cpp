@@ -5,7 +5,7 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 	if (getClient(fd)->isConnected() == false)
 	{
 		messageFromServer(fd, "You have to be connected first:\n/USER\n/NICK\n/PASS\n");
-		return;
+		return "";
 	}
 	if (input.size() == 1)
 		return "";
@@ -95,7 +95,7 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 	std::vector<Client>::iterator client = getClient(fd);
 	if (client != clients.end())
 	{
-		if (client->getUser().empty() == false)
+		if (client->getUser().empty() == false && client->isConnected())
 		{
 			messageFromServer(fd, "You already have a username: " + client->getUser() + '\n');
 			return;
@@ -221,7 +221,7 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 		return;
 	}
 	std::string topic;
-	for (size_t i = 1 ; i < input.size() ; i++)
+	for (size_t i = 2 ; i < input.size() ; i++)
 	{
 		topic += input[i];
 		if (i != input.size() - 1)
@@ -282,7 +282,7 @@ void	Server::mode(const int& fd, const std::vector<std::string>& input)
 	if (input.size() < 2)
 		return;
 	else
-		parseModes(input, channelName);
+		parseModes(fd, input, channelName);
 	// i: Set/remove Invite-only channel
 	// t: Set/remove the restrictions of the TOPIC command to channel
 	// operators

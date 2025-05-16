@@ -59,12 +59,16 @@ class	Server
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
 
-		void	mode(const int&fd, const std::vector<std::string>& input);
-		void	parseModes(const std::vector<std::string>& input, const std::string& channelName);
-		void	checkModes(std::string str, const std::vector<std::string> input, const std::string& channelName);
-		void	addInvite(char sign, const int& fd);
-		void	addTopicRestriction(char sign, const int& fd);
-		void	addPassword(char sign, const int& fd, std::vector<std::string>& input);
+		void	mode(const int& fd, const std::vector<std::string>& input);
+		void	parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName);
+		void	checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName);
+		void	addInvite(char sign, const std::string& channelName);
+		void	addTopicRestriction(char sign, const std::string& channelName);
+		void	addPassword(char sign, const std::string& channelName, std::vector<std::string>& input);
+		void	addUserLimit(char sign, const std::string& channelName, std::vector<std::string>& input);
+		void	addOperator(char sign, const std::string& channelName, const int& fd, std::vector<std::string>& input);
+		std::vector<std::string> getUserInput(const int& fd);
+		int checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
 
 		static void SignalHandler(int signum);
 	
