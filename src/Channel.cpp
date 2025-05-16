@@ -7,6 +7,7 @@ Channel::Channel(Client& client, const std::string& name) : _name(name)
 	_clients.push_back(&client);
 	_topicRestriction = false;
 	_inviteMode = false;
+	_clientLimit = -1;
 }
 
 void	Channel::sendMessage(const std::string& message) const

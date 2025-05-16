@@ -39,7 +39,7 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
 			return "";
 		}
-		if (getChannel(channelName)->getClientLimit() && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
+		if (getChannel(channelName)->getClientLimit() > 0 && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
 		{
 			messageFromServer(fd, "Channel's client limit has been reached\n");
 			return "";

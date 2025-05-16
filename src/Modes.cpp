@@ -79,33 +79,65 @@ void	Server::addPassword(char sign, const int& fd, std::vector<std::string>& inp
     std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
     if (channel != _channels.end())
     {
-        if (input.empty())
+        if (sign == '+')
         {
-            std::cout << "No password provided." << std::endl;
+            if (input.empty())
+            {
+                std::cout << "No password provided." << std::endl;
+                return;
+            }
+            channel->setPassword(input[0]);
+            std::cout << "Channel password has been changed for channel " << channel->getName() << " [" << input[0] << "]" << std::endl;
+        }
+        else
+        {
+            std::cout << sign << std::endl;
+            channel->setPassword("");
+            std::cout << "Channel password has been removed for channel " << channel->getName() << std::endl;
             return;
         }
-        channel->setPassword(input[0]);
-        std::cout << "Channel password has been changed for channel " << channel->getName() << " (" << input[0] << ")" << std::endl;
     }
     else
     {
         std::cout << "Channel not found for client." << std::endl;
     }
-	(void)fd;
 }
 
 void	Server::addOperator(char sign, std::vector<std::string>& input)
 {
-    getClient(input[0])->setAdmin(true);
-    std::cout << input[0] << " is now an operator" << std::endl;
+    if (sign == '+')
+    {
+        getClient(input[0])->setAdmin(true);
+        std::cout << input[0] << " is now an operator" << std::endl;
+    }
+    else
+    {
+        getClient(input[0])->setAdmin(false);
+        std::cout << input[0] << " is not an operator anymore" << std::endl;
+    }
 }
 
 void	Server::addUserLimit(char sign, const int& fd, std::vector<std::string>& input)
 {
-	size_t limit;
-	limit = atoi(input[0].c_str());
-	getChannel(getClient(fd)->getChannel())->setClientLimit(limit);
-    std::cout << "Channel has been limited to " << input[0] << " users" << std::endl;
+    if (sign == '+')
+    {
+        size_t limit;
+        limit = atoi(input[0].c_str());
+        if (limit > 0)
+        {
+            getChannel(getClient(fd)->getChannel())->setClientLimit(limit);
+            std::cout << "Channel has been limited to " << input[0] << " users" << std::endl;
+        }
+        else
+        {
+            std::cout << "Please enter a valid number" << std::endl;
+        }
+    }
+    else
+    {
+        getChannel(getClient(fd)->getChannel())->setClientLimit(-1);
+        std::cout << "Channel's user limit has been removed" << std::endl;
+    }
 }
 
 void	Server::checkModes(const int& fd, std::string str, const std::vector<std::string> input)
@@ -128,30 +160,27 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
             i++;
             while (i < str.length() && str[i] != '+' && str[i] != '-')
             {
-				std::cout << "Modified Input: ";
-				for (std::vector<std::string>::iterator it = modifiedInput.begin(); it != modifiedInput.end(); ++it)
-				{
-					std::cout << *it << " ";
-				}
-				std::cout << std::endl;
                 if (str[i] == 'i')
                     addInvite(sign, fd);
                 if (str[i] == 't')
                     addTopicRestriction(sign, fd);
-                if (str[i] == 'k' && !modifiedInput.empty())
+                if (str[i] == 'k')
                 {
                     addPassword(sign, fd, modifiedInput);
-                    modifiedInput.erase(modifiedInput.begin());
+                    if (!modifiedInput.empty())
+                        modifiedInput.erase(modifiedInput.begin());
                 }
-				if (str[i] == 'o' && !modifiedInput.empty())
+				if (str[i] == 'o')
                 {
 					addOperator(sign, modifiedInput);
-                    modifiedInput.erase(modifiedInput.begin());
+                    if (!modifiedInput.empty())
+                        modifiedInput.erase(modifiedInput.begin());
                 }
-				if (str[i] == 'l' && !modifiedInput.empty())
+				if (str[i] == 'l')
                 {
                     addUserLimit(sign, fd, modifiedInput);
-                    modifiedInput.erase(modifiedInput.begin());
+                    if (!modifiedInput.empty())
+                        modifiedInput.erase(modifiedInput.begin());
                 }
                 i++;
             }
