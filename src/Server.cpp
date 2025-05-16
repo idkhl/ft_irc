@@ -79,6 +79,91 @@ void Server::AcceptIncomingClient()
 	std::cout << GREEN << "Client <" << incofd << "> Connected" << WHITE << std::endl;
 }
 
+void	Server::nick(const int& fd, const std::vector<std::string>& input)
+{
+	if (getClient(fd)->isAllowed() == false)
+	{
+		std::cout << "You have to enter the password first" << std::endl;
+		return;
+	}
+	if (input.size() == 1)
+		return;
+	std::vector<Client>::iterator client = getClient(fd); 
+	if (client != clients.end())
+	{
+		client->setNick(input[1]);
+		std::cout << "Nick name set to " << input[1] << std::endl;
+	}
+}
+
+void	Server::user(const int& fd, const std::vector<std::string>& input)
+{
+	if (getClient(fd)->isAllowed() == false)
+	{
+		std::cout << "You have to enter the password first" << std::endl;
+		return;
+	}
+	if (input.size() == 1)
+		return;
+	std::vector<Client>::iterator client = getClient(fd);
+	if (client != clients.end())
+	{
+		client->setUser(input[1]);
+		std::cout << "User name set to " << input[1] << std::endl;
+	}
+}
+
+void	Server::pass(const int& fd, const std::vector<std::string>& input)
+{
+	if (input.size() == 1)
+		return;
+	if (strcmp(input[1].c_str(), Mdp))
+		std::cout << "Wrong password" << std::endl;
+	else
+	{
+		std::cout << "Good password" << std::endl;
+		getClient(fd)->setAuthorization(true);
+		std::string nick;
+		for(size_t i = 0; i < this->clients.size(); i++)
+		{
+			if (this->clients[i].getFd() == fd)
+				nick = this->clients[i].getNick();
+		}
+		std::string response = ":localhost 001 " + nick + " :Welcome to the IRC server\r\n"
+							":localhost 002 " + nick + " :Your host is localhost\r\n"
+							":localhost 003 " + nick + " :This server was created today\r\n";
+		send(fd, response.c_str(), response.length(), 0);
+	}
+}
+
+void	Server::quit(const int& fd)
+{
+	ClearClients(fd);
+}
+
+void	Server::join(const int& fd, const std::vector<std::string>& input)
+{
+	if (getClient(fd)->isAllowed() == false)
+	{
+		std::cout << "You have to enter the password first" << std::endl;
+		return;
+	}
+	if (input.size() == 1)
+		return;
+	if (getChannel(input[1]) == _channels.end())
+	{
+		_channels.push_back(Channel(*getClient(fd), input[1]));
+		std::cout << "Channel " << input[1] << " created!" << std::endl;
+	}
+	else
+	{
+		if (std::find(getChannel(input[1])->getAdmins().begin(), getChannel(input[1])->getAdmins().end(), fd) != getChannel(input[1])->getAdmins().end())
+			getChannel(input[1])->addAdmin(fd);
+		getChannel(input[1])->join(*getClient(fd));
+		std::cout << "Connected to channel " << input[1] << "!" << std::endl;
+	}
+}
+
 void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 {
 	std::string cmd = input[0];
@@ -188,7 +273,6 @@ void Server::ReceiveDataClient(int fd)
 	memset(buff, 0, sizeof(buff));
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
-
 	if(bytes <= 0)
 	{
 		std::cout << RED << "Client <" << fd << "> Disconnected" << WHITE << std::endl;
@@ -198,7 +282,8 @@ void Server::ReceiveDataClient(int fd)
 	else
 	{
 		buff[bytes] = '\0';
-		// std::cout << YEL << "Client <" << fd << "> Data: "<< std::endl << WHITE << buff;
+		std::cout << buff;
+		std::string nick;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		ParseData(fd, buff);
 	}
