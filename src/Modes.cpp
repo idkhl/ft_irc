@@ -103,18 +103,30 @@ void	Server::addPassword(char sign, const int& fd, std::vector<std::string>& inp
     }
 }
 
-void	Server::addOperator(char sign, std::vector<std::string>& input)
+void	Server::addOperator(char sign, const int& fd, std::vector<std::string>& input)
 {
+    std::vector<Client>::iterator clientIt = getClient(input[0]);
+    if (clientIt == clients.end())
+        return;
+    Client* client = &(*clientIt);
+    int opFd = client->getFd();
+    std::string channelName = client->getChannel();
+    std::vector<Channel>::iterator channel = getChannel(channelName);
+    if (channel == _channels.end())
+        return;
     if (sign == '+')
     {
-        getClient(input[0])->setAdmin(true);
+        client->setAdmin(true);
+        channel->addAdminFd(opFd);
         std::cout << input[0] << " is now an operator" << std::endl;
     }
     else
     {
-        getClient(input[0])->setAdmin(false);
+        client->setAdmin(false);
+        channel->removeAdminFd(opFd);
         std::cout << input[0] << " is not an operator anymore" << std::endl;
     }
+    (void)fd;
 }
 
 void	Server::addUserLimit(char sign, const int& fd, std::vector<std::string>& input)
@@ -172,7 +184,7 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
                 }
 				if (str[i] == 'o')
                 {
-					addOperator(sign, modifiedInput);
+					addOperator(sign, fd, modifiedInput);
                     if (!modifiedInput.empty())
                         modifiedInput.erase(modifiedInput.begin());
                 }

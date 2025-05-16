@@ -65,7 +65,7 @@ class	Server
 		void	addTopicRestriction(char sign, const int& fd);
 		void	addPassword(char sign, const int& fd, std::vector<std::string>& input);
 		int		checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
-		void	addOperator(char sign, std::vector<std::string>& input);
+		void	addOperator(char sign, const int& fd, std::vector<std::string>& input);
 		void	addUserLimit(char sign, const int& fd, std::vector<std::string>& input);
 
 		std::vector<std::string> getUserInput(const int& fd);

@@ -60,4 +60,13 @@ class	Channel
 		void				sendMessage(const std::string& message) const;
 		void				join(Client& client);
 		void				deleteClient(const int& fd);
+		void addAdminFd(int fd) {
+			if (std::find(_adminFds.begin(), _adminFds.end(), fd) == _adminFds.end())
+				_adminFds.push_back(fd);
+		}
+		void removeAdminFd(int fd) {
+			std::vector<int>::iterator it = std::find(_adminFds.begin(), _adminFds.end(), fd);
+			if (it != _adminFds.end())
+				_adminFds.erase(it);
+		}
 };
