@@ -57,16 +57,6 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 	std::vector<Client>::iterator client = getClient(fd);
 	if (client == clients.end())
 		return;
-	if (client->getUser().empty())
-	{
-		messageFromServer(fd, "You have to enter your username first (/user <username>)\n");
-		return;
-	}
-	if (client->getNick().empty())
-	{
-		messageFromServer(fd, "You have to enter your nickname first (/nick <nickname>)\n");
-		return;
-	}
 	if (input.size() == 1)
 		return;
 	if (strcmp(input[1].c_str(), Mdp))
@@ -77,9 +67,8 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 	else
 	{
 		std::cout << "Good password" << std::endl;
+		messageFromServer(fd, "Good password\n");
 		getClient(fd)->setConnexion(true);
-		if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-			getClient(fd)->setAuthorization(fd, true);
 	}
 }
 
@@ -88,6 +77,11 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 	if (input.size() == 1)
 		return;
 	std::vector<Client>::iterator client = getClient(fd);
+	if (client->isConnected() == false)
+	{
+		messageFromServer(fd, "You have to enter the password first (/PASS <password>)\n");
+		return;
+	}
 	if (client != clients.end())
 	{
 		if (client->getUser().empty() == false && client->isConnected())
@@ -104,8 +98,6 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 		std::cout << "User name set to " << input[1] << std::endl;
 		messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
 	}
-	if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-		getClient(fd)->setAuthorization(fd, true);
 }
 
 void	Server::nick(const int& fd, const std::vector<std::string>& input)
@@ -113,9 +105,14 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 	std::vector<Client>::iterator client = getClient(fd);
 	if (client == clients.end())
 		return;
+	if (client->isConnected() == false)
+	{
+		messageFromServer(fd, "You have to enter the password first (/PASS <password>)\n");
+		return;
+	}
 	if (client->getUser().empty())
 	{
-		messageFromServer(fd, "You have to enter your username first (/user <username>)\n");
+		messageFromServer(fd, "You have to enter your username first (/USER <username>)\n");
 		return;
 	}
 	if (input.size() == 1)
@@ -125,9 +122,8 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 		client->setNick(input[1]);
 		messageFromServer(fd, "Nick name set to " + input[1] + "\n");
 		std::cout << "Nick name set to " << input[1] << std::endl;
+		client->setAuthorization(fd, true);
 	}
-	if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-		getClient(fd)->setAuthorization(fd, true);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& input)

@@ -6,7 +6,7 @@
 #include "Channel.hpp"
 
 #define NC 1
-#define IRSSI
+#define IRSSI 0
 
 class Client
 {
@@ -40,7 +40,7 @@ class Client
 		void				setNick(const std::string& nick) { _nick = nick; }
 		void				setUser(const std::string& user) { _user = user; }
 		void				setIpAdd(std::string ipadd) { IPadd = ipadd; }
-		void				setAuthorization(const bool& allowed) { _allowed = allowed; }
+		void				setAuthorization(const int& fd, const bool& allowed);
 		void				setConnexion(const bool& connected) { this->connected = connected; }
 
 		bool 				operator==(const Client& client) const { return Fd == client.Fd; }

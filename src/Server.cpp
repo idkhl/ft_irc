@@ -81,17 +81,16 @@ void Server::AcceptIncomingClient()
 	messageFromServer(incofd, "WELCOME IN FT_IRC!\nEnter your USERNAME, NICKNAME and PASSWORD\n");
 }
 
-void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
+void	Server::handleCmd(const int& fd, const std::vector<std::string>& input, const char *buff)
 {
 	std::string cmd = input[0];
-	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
 	if (cmd == "/CAP")
 		return;
 	else if (cmd == "/PASS")
 		pass(fd, input);
-	else if (cmd == "/NICK" && getClient(fd)->isConnected() == true)
+	else if (cmd == "/NICK")
 		nick(fd, input);
-	else if (cmd == "/USER" && getClient(fd)->isConnected() == true)
+	else if (cmd == "/USER")
 		user(fd, input);
 	else if (cmd == "/QUIT")
 		quit(fd);
@@ -126,6 +125,9 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 		list(fd);
 	else if (cmd == "/HELP")
 		help(fd);
+	// else
+	// 	broadcastToChannel(fd, constructMessage(fd, buff));
+	(void)buff;
 }
 
 std::string	Server::constructMessage(const int& fd, const char *buff)
@@ -218,23 +220,24 @@ std::vector<std::string> Server::getUserInput(const int& fd)
     return splitInput(std::string(buffer));
 }
 
-int	Server::ParseData(int fd, char *buff)
+void	Server::ParseData(int fd, char *buff)
 {
-	std::vector<std::string> cmds;
-	cmds.push_back("/PASS");
-	cmds.push_back("/NICK");
-	cmds.push_back("/USER");
-	cmds.push_back("/JOIN");
+	// std::vector<std::string> cmds;
+	// cmds.push_back("/PASS");
+	// cmds.push_back("/NICK");
+	// cmds.push_back("/USER");
+	// cmds.push_back("/JOIN");
 	std::vector<std::string> input = splitInput(buff);
+	std::transform(input[0].begin(), input[0].end(), input[0].begin(), toupper);
 	std::cout << "buff : " << buff << std::endl;
 	if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
 		input[0] = "/" + input[0];
 	std::cout << "input : " << input[0] << std::endl;
-	if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
-		handleCmd(fd, input);
-	else
-		broadcastToChannel(fd, constructMessage(fd, buff));
-	return (0);
+	handleCmd(fd, input, buff);
+	// if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
+	// 	handleCmd(fd, input);
+	// else
+	// 	broadcastToChannel(fd, constructMessage(fd, buff));
 }
 
 int	detect_irssi(char *buff)
@@ -352,4 +355,11 @@ void	reply(int fd, std::string code, std::string msg)
 	std::string response = ":localhost " + code;
 	response += " " + msg + "\r\n";
 	send(fd, response.c_str(), response.length(), 0);
+}
+
+void	Server::deleteChannel(const std::string& channelName)
+{
+	std::vector<Channel>::iterator channel = getChannel(channelName);
+	if (channel != _channels.end())
+		_channels.erase(channel);
 }

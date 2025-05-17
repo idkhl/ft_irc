@@ -93,8 +93,8 @@ class	Server
 		void	messageFromServer(const int& fd, const std::string& message) const { send(fd, message.c_str(), message.size(), 0); }
 		void AcceptIncomingClient();
 		void ReceiveDataClient(int fd);
-		int	ParseData(int fd, char *buff);
-		void	handleCmd(const int& fd, const std::vector<std::string>& input);
+		void	ParseData(int fd, char *buff);
+		void	handleCmd(const int& fd, const std::vector<std::string>& input, const char *buff);
 		void	nick(const int& fd, const std::vector<std::string>& input);
 		void	user(const int& fd, const std::vector<std::string>& input);
 		void	quit(const int& fd);
