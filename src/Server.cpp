@@ -74,6 +74,7 @@ void Server::AcceptIncomingClient()
 	NewPoll.revents = 0;
 
 	Client client(incofd, cliadd.sin_addr);
+	client.setInterface(NC);
 	this->clients.push_back(client);
 	this->fds.push_back(NewPoll);
 	std::cout << GREEN << "Client <" << incofd << "> Connected" << WHITE << std::endl;
@@ -88,9 +89,9 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 		return;
 	else if (cmd == "/PASS")
 		pass(fd, input);
-	else if (cmd == "/NICK")
+	else if (cmd == "/NICK" && getClient(fd)->isConnected() == true)
 		nick(fd, input);
-	else if (cmd == "/USER")
+	else if (cmd == "/USER" && getClient(fd)->isConnected() == true)
 		user(fd, input);
 	else if (cmd == "/QUIT")
 		quit(fd);
@@ -217,12 +218,38 @@ std::vector<std::string> Server::getUserInput(const int& fd)
     return splitInput(std::string(buffer));
 }
 
-int Server::ParseData(int fd, char *buff)
+int	Server::ParseData(int fd, char *buff)
 {
-	if (buff[0] == '/')
-		handleCmd(fd, splitInput(buff));
-	// else
-	// 	broadcastToChannel(fd, constructMessage(fd, buff));
+	std::vector<std::string> cmds;
+	cmds.push_back("/PASS");
+	cmds.push_back("/NICK");
+	cmds.push_back("/USER");
+	cmds.push_back("/JOIN");
+	std::vector<std::string> input = splitInput(buff);
+	std::cout << "buff : " << buff << std::endl;
+	if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
+		input[0] = "/" + input[0];
+	std::cout << "input : " << input[0] << std::endl;
+	if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
+		handleCmd(fd, input);
+	else
+		broadcastToChannel(fd, constructMessage(fd, buff));
+	return (0);
+}
+
+int	detect_irssi(char *buff)
+{
+	std::string str;
+	std::string str2;
+	str2 = "CAP LS";
+	int i = 0;
+	while (buff[i] != '\n')
+	{
+		str[i] = buff[i];
+		i++;
+	}
+	if (str.find(str2, 0))
+		return (1);
 	return (0);
 }
 
@@ -241,7 +268,10 @@ void Server::ReceiveDataClient(int fd)
 	else
 	{
 		buff[bytes] = '\0';
-		std::cout << buff;
+		// std::cout << buff;
+		if (getClient(fd)->getInterface() == NC)
+			if (detect_irssi(buff))
+				getClient(fd)->setInterface(IRSSI);
 		std::string nick;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		ParseData(fd, buff);
@@ -317,9 +347,9 @@ void Server::ClearClients(int fd)
 	clients.erase(getClient(fd));
 }
 
-void	Server::deleteChannel(const std::string& channelName)
+void	reply(int fd, std::string code, std::string msg)
 {
-	std::vector<Channel>::iterator channel = getChannel(channelName);
-	if (channel != _channels.end())
-		_channels.erase(channel);
+	std::string response = ":localhost " + code;
+	response += " " + msg + "\r\n";
+	send(fd, response.c_str(), response.length(), 0);
 }

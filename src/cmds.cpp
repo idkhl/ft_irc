@@ -1,4 +1,5 @@
 #include "../include/Server.hpp"
+#include "../include/Channel.hpp"
 
 std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 {
@@ -77,10 +78,8 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 	{
 		std::cout << "Good password" << std::endl;
 		getClient(fd)->setConnexion(true);
-		std::string response = ":localhost 001 " + getClient(fd)->getNick() + " :Welcome to the IRC server\r\n"
-							":localhost 002 " + getClient(fd)->getNick() + " :Your host is localhost\r\n"
-							":localhost 003 " + getClient(fd)->getNick() + " :This server was created today\r\n";
-		send(fd, response.c_str(), response.length(), 0);
+		if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
+			getClient(fd)->setAuthorization(fd, true);
 	}
 }
 
@@ -105,6 +104,8 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 		std::cout << "User name set to " << input[1] << std::endl;
 		messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
 	}
+	if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
+		getClient(fd)->setAuthorization(fd, true);
 }
 
 void	Server::nick(const int& fd, const std::vector<std::string>& input)
@@ -125,6 +126,8 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, "Nick name set to " + input[1] + "\n");
 		std::cout << "Nick name set to " << input[1] << std::endl;
 	}
+	if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
+		getClient(fd)->setAuthorization(fd, true);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& input)
