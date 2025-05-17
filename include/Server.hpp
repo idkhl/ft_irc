@@ -70,6 +70,8 @@ class	Server
 		std::vector<std::string> getUserInput(const int& fd);
 		int checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
 		size_t	getNbrChannel(void) const { return _channels.size(); }
+		void	deleteChannel(const std::string& channelName);
+		void	deleteChannel(std::vector<Channel>::iterator channel) { _channels.erase(channel); }
 
 		static void SignalHandler(int signum);
 	

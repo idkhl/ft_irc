@@ -27,14 +27,19 @@ void	Channel::sendMessage(const std::string& message) const
 
 void	Channel::deleteClient(const int& fd)
 {
-	std::vector<Client *>::iterator client = std::find(_clients.begin(),_clients.end(), getClient(fd));
-	if (client != _clients.end())
-		_clients.erase(client);
+	for (size_t i = 0 ; i < _clients.size() ; i++)
+	{
+		if (_clients[i]->getFd() == fd)
+		{
+			_clients.erase(_clients.begin() + i);
+			return;
+		}
+	}
 }
 
 void	Channel::deleteAdmin(const int& fd)
 {
-	std::vector<int>::iterator client = std::find(_adminFds.begin(),_adminFds.end(), getClient(fd)->getFd());
+	std::vector<int>::iterator client = std::find(_adminFds.begin(),_adminFds.end(), fd);
 	if (client != _adminFds.end())
 		_adminFds.erase(client);
 }

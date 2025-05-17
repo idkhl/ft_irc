@@ -142,20 +142,22 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, "There is no channel named " + channelName + '\n');
 		return;
 	}
- 	if (getClient(fd)->isAdmin(*getChannel(channelName)))
+ 	if (!getClient(fd)->isAdmin(*getChannel(channelName)))
 	{
 		messageFromServer(fd, "You do not have the right to kick someone\n");
 		return;
 	}
 	for (size_t i = 2 ; i < input.size() ; i++)
 	{
-		if (getClient(input[i]) == clients.end() || getClient(input[i])->isInChannel(channelName))
-			messageFromServer(fd, "There is no user named " + input[i] + " in your channel\n");
+		if (getClient(input[i]) == clients.end() || !getClient(input[i])->isInChannel(channelName))
+			messageFromServer(fd, "There is no user named " + input[i] + " in the channel + " + channelName + '\n');
 		else
 		{
 			getClient(input[i])->deleteChannel(channelName);
 			getChannel(channelName)->deleteClient(getClient(input[i])->getFd());
 			getChannel(channelName)->deleteAdmin(getClient(input[i])->getFd());
+			if (getChannel(channelName)->getClientCount() == 0)
+				deleteChannel(channelName);
 			messageFromServer(fd, "You kicked " + input[i] + " form the channel " + channelName + "\n");
 		}
 	}

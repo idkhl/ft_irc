@@ -297,7 +297,7 @@ void Server::ClearClients(int fd)
 		channel->deleteClient(fd);
 		if (channel->getClientCount() == 0)
 		{
-			_channels.erase(channel);
+			deleteChannel(channel);
 			break;
 		}
 		if (channel->getNbrAdmins() == 0)
@@ -315,4 +315,11 @@ void Server::ClearClients(int fd)
 		}
 	}
 	clients.erase(getClient(fd));
+}
+
+void	Server::deleteChannel(const std::string& channelName)
+{
+	std::vector<Channel>::iterator channel = getChannel(channelName);
+	if (channel != _channels.end())
+		_channels.erase(channel);
 }
