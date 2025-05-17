@@ -29,10 +29,7 @@ void	Channel::deleteClient(const int& fd)
 {
 	std::vector<Client *>::iterator client = std::find(_clients.begin(),_clients.end(), getClient(fd));
 	if (client != _clients.end())
-	{
-		std::cout << "CHANNEL DELETED\n";
 		_clients.erase(client);
-	}
 }
 
 void	Channel::deleteAdmin(const int& fd)

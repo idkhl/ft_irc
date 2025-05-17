@@ -298,16 +298,15 @@ void Server::ClearClients(int fd)
 		if (channel->getClientCount() == 0)
 		{
 			_channels.erase(channel);
-			
-			return;
+			break;
 		}
 		if (channel->getNbrAdmins() == 0)
 		{
 			channel->addAdmin(channel->getClients()[0]->getFd());
-			messageFromServer(channel->getClients()[0]->getFd(), "You have become an operator in channel " + channel->getName() + '\n');	
+			messageFromServer(channel->getClients()[0]->getFd(), "You are now an operator of the channel " + channel->getName() + '\n');	
 		}
 	}
-	for(size_t i = 0; i < this->fds.size(); i++)
+	for (size_t i = 0; i < this->fds.size(); i++)
 	{
 		if (this->fds[i].fd == fd)
 		{
@@ -315,12 +314,5 @@ void Server::ClearClients(int fd)
 			break;
 		}
 	}
-	for(size_t i = 0; i < this->clients.size(); i++)
-	{
-		if (this->clients[i].getFd() == fd)
-		{
-			this->clients.erase(this->clients.begin() + i); 
-			break;
-		}
-	}
+	clients.erase(getClient(fd));
 }

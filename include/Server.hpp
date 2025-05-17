@@ -69,6 +69,7 @@ class	Server
 		void	addOperator(char sign, const std::string& channelName, const int& fd, std::vector<std::string>& input);
 		std::vector<std::string> getUserInput(const int& fd);
 		int checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
+		size_t	getNbrChannel(void) const { return _channels.size(); }
 
 		static void SignalHandler(int signum);
 	
