@@ -65,11 +65,14 @@ void	Server::quit(const int& fd)
 void	Server::pass(const int& fd, const std::vector<std::string>& input)
 {
 	if (input.size() == 1)
-		return;
+		return ;
+	if (getClient(fd)->isConnected() == true)
+		return (reply(fd, ERR_ALREADYREGISTERED, ":You are already register"));
 	if (strcmp(input[1].c_str(), Mdp))
 	{
 		std::cout << "Wrong password" << std::endl;
-		messageFromServer(fd, "Wrong password!\n");
+		reply(fd, ERR_PASSWDMISMATCH, ":Wrong Password");
+		//messageFromServer(fd, "Wrong password!\n");
 	}
 	else
 	{

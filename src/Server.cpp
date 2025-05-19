@@ -95,10 +95,7 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 	else if (cmd == "/QUIT")
 		quit(fd);
 	else if (cmd == "/JOIN")
-	{
-		std::cout << "tes cmd" << std::endl;
 		join(fd, input);
-	}
 	else if (cmd == "/PART")
 		part(fd);
 	else if (cmd == "/KICK")
@@ -106,7 +103,10 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 	else if (cmd == "/INVITE")
 		invite(fd, input);
 	else if (cmd == "/MODE")
+	{
+		std::cout << "tests " << input[0] << std::endl;
 		mode(fd, input);
+	}
 	else if (cmd == "/TOPIC")
 		topic(fd, input);
 	else if (cmd == "/MSG")
@@ -165,11 +165,17 @@ int Server::ParseData(int fd, char *buff)
 	cmds.push_back("/NICK");
 	cmds.push_back("/USER");
 	cmds.push_back("/JOIN");
+	cmds.push_back("/QUIT");
+	cmds.push_back("/PART");
+	cmds.push_back("/KICK");
+	cmds.push_back("/INVITE");
+	// cmds.push_back("/MODE");
+	cmds.push_back("/TOPIC");
+	cmds.push_back("/MSG");
 	std::vector<std::string> input = splitInput(buff);
 	std::cout << "buff : " << buff << std::endl;
 	if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
 		input[0] = "/" + input[0];
-	std::cout << "input : " << input[0] << std::endl;
 	if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
 		handleCmd(fd, input);
 	else
