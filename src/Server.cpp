@@ -94,22 +94,7 @@ void	Server::handleCmd(const int& fd, const std::vector<std::string>& input)
 	else if (cmd == "/QUIT")
 		quit(fd);
 	else if (cmd == "/JOIN")
-	{
-		std::string channelName = join(fd, input);
-		if (channelName.empty())
-			return;
-
-		if (!getChannel(channelName)->getPassword().empty())
-		{
-			messageFromServer(fd, std::string("Please enter " + channelName + "'s password:\n"));
-			std::vector<std::string> passwordInput = getUserInput(fd);
-			if (passwordInput.empty() || checkChannelPassword(fd, channelName, passwordInput) == -1)
-			{
-				messageFromServer(fd, "Failed to join the channel. Incorrect password.\n");
-				return;
-			}
-		}
-	}
+		join(fd, input);
 	else if (cmd == "/PART")
 		part(fd);
 	else if (cmd == "/KICK")
@@ -167,34 +152,6 @@ static std::vector<std::string>	splitInput(std::string str)
 			result.push_back(std::string(&str[i]));
 	}
 	return result;
-}
-
-std::vector<std::string> Server::getUserInput(const int& fd)
-{
-    char buffer[1024];
-    memset(buffer, 0, sizeof(buffer));
-
-    struct pollfd pfd;
-    pfd.fd = fd;
-    pfd.events = POLLIN;
-
-    int pollResult = poll(&pfd, 1, 5000);
-    if (pollResult <= 0)
-    {
-        std::cout << "Timeout or error while waiting for input from client <" << fd << ">." << std::endl;
-        return std::vector<std::string>();
-    }
-
-    ssize_t bytes = recv(fd, buffer, sizeof(buffer) - 1, 0);
-    if (bytes <= 0)
-    {
-        std::cout << "Failed to receive input from client <" << fd << ">." << std::endl;
-        return std::vector<std::string>();
-    }
-
-    buffer[bytes] = '\0';
-    std::cout << "Received input from client <" << fd << ">: " << buffer << std::endl;
-    return splitInput(std::string(buffer));
 }
 
 int Server::ParseData(int fd, char *buff)

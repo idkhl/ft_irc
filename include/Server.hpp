@@ -49,7 +49,7 @@ class	Server
 		void	user(const int& fd, const std::vector<std::string>& input);
 		void	quit(const int& fd);
 		void	pass(const int& fd, const std::vector<std::string>& input);
-		std::string	join(const int& fd, const std::vector<std::string>& input);
+		void	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
 		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
 		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
@@ -64,7 +64,7 @@ class	Server
 		void	addInvite(char sign, const int& fd);
 		void	addTopicRestriction(char sign, const int& fd);
 		void	addPassword(char sign, const int& fd, std::vector<std::string>& input);
-		int		checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
+		int		checkChannelPassword(const int& fd, std::string channel, const std::string& input);
 		void	addOperator(char sign, const int& fd, std::vector<std::string>& input);
 		void	addUserLimit(char sign, const int& fd, std::vector<std::string>& input);
 
