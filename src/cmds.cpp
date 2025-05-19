@@ -19,10 +19,10 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	if (getClient(fd)->isAllowed() == false)
 	{
 		messageFromServer(fd, "You have to enter the password, username and nickname first\n");
-		return;
+		return ;
 	}
 	if (input.size() == 1)
-		return;
+		return ;
 	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
 	if (getChannel(channelName) == _channels.end())
 	{
@@ -40,8 +40,28 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
 			return;
 		}
+		if (getChannel(channelName)->getClientLimit() > 0 && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
+		{
+			messageFromServer(fd, "Channel's client limit has been reached\n");
+			return;
+		}
 		if (getClient(fd)->getChannel().empty() == false)
 			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
+		if (getChannel(channelName)->getPassword().empty() == false)
+		{
+			if (input.size() != 3)
+			{
+				std::cout << "Please enter channel's password" << std::endl;
+				return;
+			}
+			if (strcmp(input[2].c_str(), (getChannel(channelName)->getPassword()).c_str()) != 0)
+			{
+				std::cout << "Wrong password" << std::endl;
+				std::cout << input[2] << std::endl;
+				messageFromServer(fd, "Wrong password!\n");
+				return ;
+			}
+		}
 		getClient(fd)->setChannel(channelName);
 		if (std::find(getChannel(channelName)->getAdmins().begin(), getChannel(channelName)->getAdmins().end(), fd) != getChannel(channelName)->getAdmins().end())
 			getClient(fd)->setAdmin(true);
