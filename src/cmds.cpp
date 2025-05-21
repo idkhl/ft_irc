@@ -130,6 +130,11 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Nick name set to " << input[1] << std::endl;
 	}
 }
+void	Server::pong(const int fd, std::string token)
+{
+	const std::string message = "PONG " + token + "\r\n";
+	send(fd, &message, message.size(), 0);
+}
 
 void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)
 {
@@ -169,6 +174,7 @@ void	Server::invite(const int& fd, const std::vector<std::string>& usersToInvite
 		{
 			getClient(usersToInvite[i])->addInvitation(getClient(fd)->getChannel());
 			messageFromServer(fd, "You invited " + usersToInvite[i] + " to the channel " + getClient(fd)->getChannel() + "\n");
+			reply(fd, RPL_INVITING, getClient(fd)->getChannel() + " " + usersToInvite[i]);
 		}
 	}
 }
@@ -183,7 +189,6 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 			reply(fd, RPL_NOTOPIC, getClient(fd)->getChannel() + " :No topic is set");
 		else
 			reply(fd, RPL_TOPIC, getClient(fd)->getChannel() + " :" + getChannel(getClient(fd)->getChannel())->getTopic());
-		// messageFromServer(fd, "The topic of the channel " + getClient(fd)->getChannel() + " is " + getChannel(getClient(fd)->getChannel())->getTopic() + "\n");
 		return;
 	}
 	if (!getClient(fd)->isAdmin() && getChannel(getClient(fd)->getChannel())->isTopicRestriction())
