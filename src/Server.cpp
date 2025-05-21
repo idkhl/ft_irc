@@ -160,30 +160,30 @@ static std::vector<std::string>	splitInput(std::string str)
 
 int Server::ParseData(int fd, char *buff)
 {
-	// std::vector<std::string> cmds;
-	// cmds.push_back("/PASS");
-	// cmds.push_back("/NICK");
-	// cmds.push_back("/USER");
-	// cmds.push_back("/JOIN");
-	// cmds.push_back("/QUIT");
-	// cmds.push_back("/PART");
-	// cmds.push_back("/KICK");
-	// cmds.push_back("/INVITE");
-	// // cmds.push_back("/MODE");
-	// cmds.push_back("/TOPIC");
-	// cmds.push_back("/MSG");
-	// std::vector<std::string> input = splitInput(buff);
-	// std::cout << "buff : " << buff << std::endl;
-	// if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
-	// 	input[0] = "/" + input[0];
-	// if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
-	// 	handleCmd(fd, input);
-	// else
-	// 	broadcastToChannel(fd, constructMessage(fd, buff));
-	if (buff[0] == '/')
-		handleCmd(fd, splitInput(buff));
+	std::vector<std::string> cmds;
+	cmds.push_back("/PASS");
+	cmds.push_back("/NICK");
+	cmds.push_back("/USER");
+	cmds.push_back("/JOIN");
+	cmds.push_back("/QUIT");
+	cmds.push_back("/PART");
+	cmds.push_back("/KICK");
+	cmds.push_back("/INVITE");
+	cmds.push_back("/MODE");
+	cmds.push_back("/TOPIC");
+	cmds.push_back("/MSG");
+	std::vector<std::string> input = splitInput(buff);
+	std::cout << "buff : " << buff << std::endl;
+	if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
+		input[0] = "/" + input[0];
+	if (std::find(cmds.begin(), cmds.end(), input[0]) != cmds.end())
+		handleCmd(fd, input);
 	else
 		broadcastToChannel(fd, constructMessage(fd, buff));
+	// if (buff[0] == '/')
+	// 	handleCmd(fd, splitInput(buff));
+	// else
+	// 	broadcastToChannel(fd, constructMessage(fd, buff));
 	return (0);
 }
 
