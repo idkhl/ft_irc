@@ -37,12 +37,12 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	{
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 		{
-			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
+			reply(fd, ERR_INVITEONLYCHAN, channelName + " :Cannot join channel (+i)");
 			return;
 		}
 		if (getChannel(channelName)->getClientLimit() > 0 && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
 		{
-			messageFromServer(fd, "Channel's client limit has been reached\n");
+			reply(fd, ERR_CHANNELISFULL, channelName + " :Cannot join channel (+l)");
 			return;
 		}
 		if (getClient(fd)->getChannel().empty() == false)
@@ -51,14 +51,13 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		{
 			if (input.size() != 3)
 			{
-				std::cout << "Please enter channel's password" << std::endl;
+				reply(fd, ERR_BADCHANNELKEY, channelName + " :Cannot join channel (+k)");
 				return;
 			}
 			if (strcmp(input[2].c_str(), (getChannel(channelName)->getPassword()).c_str()) != 0)
 			{
 				std::cout << "Wrong password" << std::endl;
-				std::cout << input[2] << std::endl;
-				messageFromServer(fd, "Wrong password!\n");
+				reply(fd, ERR_BADCHANNELKEY, channelName + " :Cannot join channel (+k)");
 				return ;
 			}
 		}
@@ -69,12 +68,12 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
-	if (getChannel(channelName)->getTopic().empty())
-		reply(fd, RPL_NOTOPIC, channelName + " :No topic is set");
-	else
-		reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
-	reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
-	reply(fd, RPL_ENDOFNAMES, channelName + " :End of user's list.");
+	// if (getChannel(channelName)->getTopic().empty())
+	// 	reply(fd, RPL_NOTOPIC, channelName + " :No topic is set");
+	// else
+	// 	reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
+	// reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
+	// reply(fd, RPL_ENDOFNAMES, channelName + " :End of user's list.");
 }
 
 void	Server::quit(const int& fd)
@@ -87,11 +86,11 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 	if (input.size() == 1)
 		return ;
 	if (getClient(fd)->isConnected() == true)
-		return (reply(fd, ERR_ALREADYREGISTERED, ":You are already register"));
+		return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
 	if (strcmp(input[1].c_str(), Mdp))
 	{
 		std::cout << "Wrong password" << std::endl;
-		reply(fd, ERR_PASSWDMISMATCH, ":Wrong Password");
+		reply(fd, ERR_PASSWDMISMATCH, ":Password incorrect");
 		//messageFromServer(fd, "Wrong password!\n");
 	}
 	else
@@ -180,7 +179,11 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 		return;
 	if (input.size() == 1)
 	{
-		messageFromServer(fd, "The topic of the channel " + getClient(fd)->getChannel() + " is " + getChannel(getClient(fd)->getChannel())->getTopic() + "\n");
+		if (getChannel(getClient(fd)->getChannel())->getTopic().empty())
+			reply(fd, RPL_NOTOPIC, getClient(fd)->getChannel() + " :No topic is set");
+		else
+			reply(fd, RPL_TOPIC, getClient(fd)->getChannel() + " :" + getChannel(getClient(fd)->getChannel())->getTopic());
+		// messageFromServer(fd, "The topic of the channel " + getClient(fd)->getChannel() + " is " + getChannel(getClient(fd)->getChannel())->getTopic() + "\n");
 		return;
 	}
 	if (!getClient(fd)->isAdmin() && getChannel(getClient(fd)->getChannel())->isTopicRestriction())
