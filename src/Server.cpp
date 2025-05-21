@@ -110,6 +110,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 {
 	std::vector<std::string> input = splitInput(buff);
 	std::string cmd = input[0];
+	// std::cout << "cmd : " << cmd << std::endl;
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
 	if (cmd == "CAP")
 		return;
@@ -123,7 +124,11 @@ void	Server::handleCmd(const int& fd, char *buff)
 		quit(fd);
 	else if (cmd == "JOIN")
 		join(fd, input);
-	else if (cmd == "PART")
+	else if (cmd == "MSG")
+		msg(fd, input);
+	if (_channels.size() == 0)
+		return ;
+	if (cmd == "PART")
 		part(fd);
 	else if (cmd == "KICK")
 		kick(fd, input);
@@ -136,8 +141,6 @@ void	Server::handleCmd(const int& fd, char *buff)
 	}
 	else if (cmd == "TOPIC")
 		topic(fd, input);
-	else if (cmd == "MSG")
-		msg(fd, input);
 	else
 		broadcastToChannel(fd, constructMessage(fd, buff));
 }
@@ -159,35 +162,6 @@ void	Server::broadcastToChannel(const int& fd, const std::string& message)
 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
 	if (channel != _channels.end())
 		channel->sendMessage(message);
-}
-
-// int Server::ParseData(int fd, char *buff)
-// {
-// 	std::vector<std::string> input = splitInput(buff);
-// 	std::cout << "buff : " << buff << std::endl;
-// 	// if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
-// 	// 	input[0] = "/" + input[0];
-// 	if (input[0][0] == '/')
-// 		handleCmd(fd, input);
-// 	else
-// 		broadcastToChannel(fd, constructMessage(fd, buff));
-// 	return (0);
-// }
-
-int	detect_irssi(char *buff)
-{
-	std::string str;
-	std::string str2;
-	str2 = "CAP LS";
-	int i = 0;
-	while (buff[i] != '\n')
-	{
-		str[i] = buff[i];
-		i++;
-	}
-	if (str.find(str2, 0))
-		return (1);
-	return (0);
 }
 
 void Server::ReceiveDataClient(int fd)
