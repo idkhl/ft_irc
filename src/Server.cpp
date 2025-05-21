@@ -80,37 +80,41 @@ void Server::AcceptIncomingClient()
 	std::cout << GREEN << "Client <" << incofd << "> Connected" << WHITE << std::endl;
 }
 
-static std::vector<std::string>	splitInput(std::string str)
+static std::vector<std::string> splitInput(std::string str)
 {
-	bool flag = false;
-	for (size_t i = 0 ; i < str.size() ; i++)
+	if (str.size() >= 2 && str.substr(str.size() - 2) == "\r\n")
+		str.erase(str.size() - 2);
+
+	for (size_t i = 0; i < str.size(); i++)
 	{
 		if (str[i] == '\n')
 			str[i] = ' ';
 	}
-	for (size_t i = 0 ; i < str.size() ; i++)
-	{
-		if (str[i] != ' ')
-			flag = true;
-		if (str[i] == ' ' && flag)
-			str[i] = 0;
-	}
+
 	std::vector<std::string> result;
-	for (size_t i = 0 ; i < str.size() ; i++)
+	size_t start = 0;
+	while (start < str.size())
 	{
-		if (i == 0 && str[i])
-			result.push_back(std::string(&str[i]));
-		else if (str[i] && !str[i - 1])
-			result.push_back(std::string(&str[i]));
+		while (start < str.size() && str[start] == ' ')
+			start++;
+		if (start >= str.size())
+			break;
+		size_t end = start;
+		while (end < str.size() && str[end] != ' ')
+			end++;
+		result.push_back(str.substr(start, end - start));
+		start = end;
 	}
 	return result;
 }
 
 void	Server::handleCmd(const int& fd, char *buff)
 {
-	std::vector<std::string> input = splitInput(buff);
-	std::string cmd = input[0];
-	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
+    std::vector<std::string> input = splitInput(buff);
+    if (input.empty())
+        return;
+    std::string cmd = input[0];
+    std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
 	if (cmd == "CAP")
 		return;
 	else if (cmd == "PASS")
