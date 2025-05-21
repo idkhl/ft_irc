@@ -116,6 +116,7 @@ class	Server
 		int		checkChannelPassword(const int& fd, std::string channel, const std::string& input);
 		void	addOperator(char sign, const int& fd, std::vector<std::string>& input);
 		void	addUserLimit(char sign, const int& fd, std::vector<std::string>& input);
+		void	check_pass(const int& fd, std::vector<std::string> input);
 
 		std::vector<std::string> getUserInput(const int& fd);
 

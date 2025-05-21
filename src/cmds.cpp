@@ -68,12 +68,6 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
-	// if (getChannel(channelName)->getTopic().empty())
-	// 	reply(fd, RPL_NOTOPIC, channelName + " :No topic is set");
-	// else
-	// 	reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
-	// reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
-	// reply(fd, RPL_ENDOFNAMES, channelName + " :End of user's list.");
 }
 
 void	Server::quit(const int& fd)

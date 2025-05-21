@@ -80,6 +80,17 @@ void Server::AcceptIncomingClient()
 	std::cout << GREEN << "Client <" << incofd << "> Connected" << WHITE << std::endl;
 }
 
+void	Server::check_pass(const int& fd, std::vector<std::string> input)
+{
+	if (input.size() > 2 && input[2] == "PASS" && input[3] == Mdp)
+	{
+		std::cout << "Good password" << std::endl;
+		messageFromServer(fd, "You are connected!\n");
+		getClient(fd)->setConnexion(true);
+		getClient(fd)->setAuthorization(fd, true);
+	}
+}
+
 static std::vector<std::string>	splitInput(std::string str)
 {
 	bool flag = false;
@@ -110,10 +121,9 @@ void	Server::handleCmd(const int& fd, char *buff)
 {
 	std::vector<std::string> input = splitInput(buff);
 	std::string cmd = input[0];
-	// std::cout << "cmd : " << cmd << std::endl;
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
 	if (cmd == "CAP")
-		return;
+		return (check_pass(fd, input));
 	else if (cmd == "PASS")
 		pass(fd, input);
 	else if (cmd == "NICK" && getClient(fd)->isConnected() == true)
@@ -135,10 +145,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 	else if (cmd == "INVITE")
 		invite(fd, input);
 	else if (cmd == "MODE")
-	{
-		std::cout << "tests " << input[0] << std::endl;
 		mode(fd, input);
-	}
 	else if (cmd == "TOPIC")
 		topic(fd, input);
 	else
@@ -180,6 +187,7 @@ void Server::ReceiveDataClient(int fd)
 	else
 	{
 		buff[bytes] = '\0';
+		std::cout << "buff : " << buff << std::endl;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		handleCmd(fd, buff);
 	}
