@@ -99,10 +99,7 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Good password" << std::endl;
 		messageFromServer(fd, "You are connected!\n");
 		getClient(fd)->setConnexion(true);
-		if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-		{	
-			getClient(fd)->setAuthorization(fd, true);
-		}
+		getClient(fd)->setAuthorization(fd, true);
 	}
 }
 
@@ -114,11 +111,10 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 	if (client != clients.end())
 	{
 		client->setUser(input[1]);
+		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
 		std::cout << "User name set to " << input[1] << std::endl;
-		messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
+		// messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
 	}
-	if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-		getClient(fd)->setAuthorization(fd, true);
 }
 
 void	Server::nick(const int& fd, const std::vector<std::string>& input)
@@ -129,11 +125,11 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 	if (client != clients.end())
 	{
 		client->setNick(input[1]);
-		messageFromServer(fd, "Nick name set to " + input[1] + "\n");
+		std::string msg = ":yrio!~yrio@localhost NICK :" + client->getNick() + "\r\n";
+		send(fd, msg.c_str(), msg.length(), 0);
+		// messageFromServer(fd, "Nick name set to " + input[1] + "\n");
 		std::cout << "Nick name set to " << input[1] << std::endl;
 	}
-	if (!getClient(fd)->getUser().empty() && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected())
-		getClient(fd)->setAuthorization(fd, true);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)
