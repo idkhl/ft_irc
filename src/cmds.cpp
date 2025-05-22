@@ -1,5 +1,6 @@
 #include "../include/Server.hpp"
 #include "../include/Channel.hpp"
+#include "../include/Client.hpp"
 
 std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 {
@@ -32,18 +33,38 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 	{
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 		{
-			messageFromServer(fd, "You can not enter this channel because you are not invited\n");
+			reply(fd, ERR_INVITEONLYCHAN, channelName + " :Cannot join channel (+i)");
 			return "";
 		}
 		if (getChannel(channelName)->getClientLimit() > 0 && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
 		{
-			messageFromServer(fd, "Channel's client limit has been reached\n");
+			reply(fd, ERR_CHANNELISFULL, channelName + " :Cannot join channel (+l)");
 			return "";
 		}
-		getChannel(channelName)->addClient(*getClient(fd));
+		if (getChannel(channelName)->getPassword().empty() == false)
+		{
+			if (input.size() != 3)
+			{
+				reply(fd, ERR_BADCHANNELKEY, channelName + " :Cannot join channel (+k)");
+				return;
+			}
+			if (strcmp(input[2].c_str(), (getChannel(channelName)->getPassword()).c_str()) != 0)
+			{
+				std::cout << "Wrong password" << std::endl;
+				reply(fd, ERR_BADCHANNELKEY, channelName + " :Cannot join channel (+k)");
+				return "";
+			}
+		}
+		getChannel(channelName)->join(*getClient(fd));
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
+	// if (getChannel(channelName)->getTopic().empty())
+	// 	reply(fd, RPL_NOTOPIC, channelName + " :No topic is set");
+	// else
+	// 	reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
+	// reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
+	// reply(fd, RPL_ENDOFNAMES, channelName + " :End of user's list.");
 	return channelName;
 }
 
@@ -58,17 +79,21 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 	if (client == clients.end())
 		return;
 	if (input.size() == 1)
-		return;
+		return ;
+	if (getClient(fd)->isConnected() == true)
+		return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
 	if (strcmp(input[1].c_str(), Mdp))
 	{
 		std::cout << "Wrong password" << std::endl;
-		messageFromServer(fd, "Wrong password!\n");
+		reply(fd, ERR_PASSWDMISMATCH, ":Password incorrect");
+		//messageFromServer(fd, "Wrong password!\n");
 	}
 	else
 	{
 		std::cout << "Good password" << std::endl;
 		messageFromServer(fd, "Good password\n");
 		getClient(fd)->setConnexion(true);
+		getClient(fd)->setAuthorization(fd, true);
 	}
 }
 
@@ -95,8 +120,9 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 			return;
 		}
 		client->setUser(input[1]);
+		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
 		std::cout << "User name set to " << input[1] << std::endl;
-		messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
+		// messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
 	}
 }
 
@@ -120,10 +146,18 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 	if (client != clients.end())
 	{
 		client->setNick(input[1]);
-		messageFromServer(fd, "Nick name set to " + input[1] + "\n");
+		std::string msg = ":yrio!~yrio@localhost NICK :" + client->getNick() + "\r\n";
+		send(fd, msg.c_str(), msg.length(), 0);
+		// messageFromServer(fd, "Nick name set to " + input[1] + "\n");
 		std::cout << "Nick name set to " << input[1] << std::endl;
 		client->setAuthorization(fd, true);
 	}
+}
+
+void	Server::pong(const int fd, std::string token)
+{
+	const std::string message = "PONG " + token + "\r\n";
+	send(fd, &message, message.size(), 0);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& input)
@@ -185,6 +219,7 @@ void	Server::invite(const int& fd, const std::vector<std::string>& input)
 		{
 			getClient(input[i])->addInvitation(channelName);
 			messageFromServer(fd, "You invited " + input[i] + " to the channel " + channelName + "\n");
+			reply(fd, RPL_INVITING, channelName + " " + input[i]);
 		}
 	}
 }
@@ -207,9 +242,9 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 	if (input.size() == 2)
 	{
 		if (getChannel(channelName)->getTopic().empty())
-			messageFromServer(fd, "This channel has no topic\n");
+			reply(fd, RPL_NOTOPIC, channelName + " :No topic is set");
 		else
-			messageFromServer(fd, "The topic of the channel " + channelName + " is " + getChannel(channelName)->getTopic() + "\n");
+			reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
 		return;
 	}
 	if (!getClient(fd)->isAdmin(*getChannel(channelName)) && getChannel(channelName)->isTopicRestriction())

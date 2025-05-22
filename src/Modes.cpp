@@ -95,6 +95,13 @@ void	Server::addPassword(char sign, const std::string& channelName, std::vector<
 
 void	Server::addOperator(char sign, const std::string& channelName, const int& fd, std::vector<std::string>& input)
 {
+	std::vector<Client>::iterator clientIt = getClient(input[0]);
+	if (clientIt == clients.end())
+		return;
+	Client* client = &(*clientIt);
+	std::vector<Channel>::iterator channel = getChannel(channelName);
+	if (channel == _channels.end())
+		return;
 	if (sign == '+')
 	{
 		getChannel(channelName)->addAdmin(fd);
@@ -159,11 +166,11 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
                 				modifiedInput.erase(modifiedInput.begin());
                 		}
 				if (str[i] == 'o')
-                		{
-					addOperator(sign, channelName, fd, modifiedInput);
-                			if (!modifiedInput.empty())
-                				modifiedInput.erase(modifiedInput.begin());
-                		}
+                {
+			addOperator(sign, channelName, fd, modifiedInput);
+        		if (!modifiedInput.empty())
+        			modifiedInput.erase(modifiedInput.begin());
+                }
 				if (str[i] == 'l')
                 		{
                 			addUserLimit(sign, channelName, modifiedInput);

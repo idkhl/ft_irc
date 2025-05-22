@@ -93,15 +93,17 @@ class	Server
 		void	messageFromServer(const int& fd, const std::string& message) const { send(fd, message.c_str(), message.size(), 0); }
 		void AcceptIncomingClient();
 		void ReceiveDataClient(int fd);
-		void	ParseData(int fd, char *buff);
+		int	ParseData(int fd, char *buff);
 		void	handleCmd(const int& fd, const std::vector<std::string>& input, const char *buff);
 		void	nick(const int& fd, const std::vector<std::string>& input);
 		void	user(const int& fd, const std::vector<std::string>& input);
 		void	quit(const int& fd);
 		void	pass(const int& fd, const std::vector<std::string>& input);
 		std::string	join(const int& fd, const std::vector<std::string>& input);
-		void	kick(const int& fd, const std::vector<std::string>& input);
-		void	invite(const int& fd, const std::vector<std::string>& input);
+		void	part(const int& fd);
+		void	pong(const int fd, std::string token);
+		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
+		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
 		void	topic(const int& fd, const std::vector<std::string>& input);
 		void	msg(const int& fd, const std::vector<std::string>& input);
 		void	list(const int& fd);
@@ -109,14 +111,16 @@ class	Server
 		std::string	constructMessage(const int& fd, const char *buff);
 		void broadcastToChannel(const int& fd, const std::string& message);
 
-		void	mode(const int& fd, const std::vector<std::string>& input);
+		void	mode(const int&fd, const std::vector<std::string>& input);
 		void	parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName);
 		void	checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName);
 		void	addInvite(char sign, const std::string& channelName);
 		void	addTopicRestriction(char sign, const std::string& channelName);
 		void	addPassword(char sign, const std::string& channelName, std::vector<std::string>& input);
-		void	addUserLimit(char sign, const std::string& channelName, std::vector<std::string>& input);
+		int	checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
 		void	addOperator(char sign, const std::string& channelName, const int& fd, std::vector<std::string>& input);
+		void	addUserLimit(char sign, const std::string& channelName, std::vector<std::string>& input);
+
 		std::vector<std::string> getUserInput(const int& fd);
 		int checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
 		size_t	getNbrChannel(void) const { return _channels.size(); }
