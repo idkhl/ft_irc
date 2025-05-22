@@ -125,26 +125,27 @@ void	Server::check_connexion(const int& fd, std::vector<std::string> input)
 
 static std::vector<std::string>	splitInput(std::string str)
 {
-	bool flag = false;
-	for (size_t i = 0 ; i < str.size() ; i++)
+	if (str.size() >= 2 && str.substr(str.size() - 2) == "\r\n")
+		str.erase(str.size() - 2);
+
+	for (size_t i = 0; i < str.size(); i++)
 	{
 		if (str[i] == '\n')
 			str[i] = ' ';
 	}
-	for (size_t i = 0 ; i < str.size() ; i++)
-	{
-		if (str[i] != ' ')
-			flag = true;
-		if (str[i] == ' ' && flag)
-			str[i] = 0;
-	}
 	std::vector<std::string> result;
-	for (size_t i = 0 ; i < str.size() ; i++)
+	size_t start = 0;
+	while (start < str.size())
 	{
-		if (i == 0 && str[i])
-			result.push_back(std::string(&str[i]));
-		else if (str[i] && !str[i - 1])
-			result.push_back(std::string(&str[i]));
+		while (start < str.size() && str[start] == ' ')
+			start++;
+		if (start >= str.size())
+			break;
+		size_t end = start;
+		while (end < str.size() && str[end] != ' ')
+			end++;
+		result.push_back(str.substr(start, end - start));
+		start = end;
 	}
 	return result;
 }
@@ -216,6 +217,7 @@ void Server::ReceiveDataClient(int fd)
 		std::cout << "buff : " << buff << std::endl;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		handleCmd(fd, buff);
+		std::cout << "buffer: " << buff << std::endl;
 	}
 }
 
