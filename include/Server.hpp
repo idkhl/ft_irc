@@ -101,6 +101,7 @@ class	Server
 		void	pass(const int& fd, const std::vector<std::string>& input);
 		void	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
+		void	pong(const int fd, std::string token);
 		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
 		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
 		void	topic(const int& fd, const std::vector<std::string>& input);

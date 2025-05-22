@@ -114,6 +114,7 @@ void	Server::handleCmd(const int& fd, char *buff)
         return;
     std::string cmd = input[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
+	// std::cout << "LAAAAAA  " + cmd << std::endl;
 	if (cmd == "CAP")
 		return;
 	else if (cmd == "PASS")
@@ -125,7 +126,9 @@ void	Server::handleCmd(const int& fd, char *buff)
 	else if (cmd == "QUIT")
 		quit(fd);
 	else if (cmd == "JOIN")
-		join(fd, input);
+			join(fd, input);
+	else if (cmd == "PING")
+		pong(fd, input[1]);
 	else if (cmd == "PART")
 		part(fd);
 	else if (cmd == "KICK")
@@ -177,21 +180,21 @@ void	Server::broadcastToChannel(const int& fd, const std::string& message)
 // 	return (0);
 // }
 
-int	detect_irssi(char *buff)
-{
-	std::string str;
-	std::string str2;
-	str2 = "CAP LS";
-	int i = 0;
-	while (buff[i] != '\n')
-	{
-		str[i] = buff[i];
-		i++;
-	}
-	if (str.find(str2, 0))
-		return (1);
-	return (0);
-}
+// int	detect_irssi(char *buff)
+// {
+// 	std::string str;
+// 	std::string str2;
+// 	str2 = "CAP LS";
+// 	int i = 0;
+// 	while (buff[i] != '\n')
+// 	{
+// 		str[i] = buff[i];
+// 		i++;
+// 	}
+// 	if (str.find(str2, 0))
+// 		return (1);
+// 	return (0);
+// }
 
 void Server::ReceiveDataClient(int fd)
 {
@@ -211,6 +214,7 @@ void Server::ReceiveDataClient(int fd)
 		buff[bytes] = '\0';
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		handleCmd(fd, buff);
+		std::cout << "buffer: " << buff << std::endl;
 	}
 }
 

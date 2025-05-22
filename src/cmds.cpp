@@ -22,7 +22,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		return ;
 	}
 	if (input.size() == 1)
-		return ;
+		return (reply(fd, ERR_NEEDMOREPARAMS, input[0] + " :Not enough parameters"));
 	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
 	if (getChannel(channelName) == _channels.end())
 	{
@@ -67,6 +67,8 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		getChannel(channelName)->join(*getClient(fd));
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
+		reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
+		reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
 	}
 	// if (getChannel(channelName)->getTopic().empty())
 	// 	reply(fd, RPL_NOTOPIC, channelName + " :No topic is set");
@@ -84,7 +86,7 @@ void	Server::quit(const int& fd)
 void	Server::pass(const int& fd, const std::vector<std::string>& input)
 {
 	if (input.size() == 1)
-		return ;
+		return (reply(fd, ERR_NEEDMOREPARAMS, input[0] + " :Not enough parameters"));
 	if (getClient(fd)->isConnected() == true)
 		return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
 	if (strcmp(input[1].c_str(), Mdp))
@@ -105,10 +107,12 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 void	Server::user(const int& fd, const std::vector<std::string>& input)
 {
 	if (input.size() == 1)
-		return;
+		return (reply(fd, ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	std::vector<Client>::iterator client = getClient(fd);
 	if (client != clients.end())
 	{
+		if (client->isAllowed())
+			return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
 		client->setUser(input[1]);
 		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
 		std::cout << "User name set to " << input[1] << std::endl;
@@ -116,19 +120,58 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 	}
 }
 
+bool isSpecial(char c)
+{
+    std::string specials = "[]\\`_^{|}";
+    return specials.find(c) != std::string::npos;
+}
+
+bool isValidNickname(const std::string& nickname)
+{
+    if (nickname.empty() || nickname.size() > 9)
+        return false;
+
+    char first = nickname[0];
+    if (!std::isalpha(first) && !isSpecial(first))
+        return false;
+
+    for (size_t i = 1; i < nickname.size(); ++i) {
+        char c = nickname[i];
+        if (!std::isalpha(c) && !std::isdigit(c) && !isSpecial(c) && c != '-') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void	Server::nick(const int& fd, const std::vector<std::string>& input)
 {
 	if (input.size() == 1)
-		return;
+		return (reply(fd, ERR_NONICKNAMEGIVEN, ":No nickname given"));
 	std::vector<Client>::iterator client = getClient(fd); 
 	if (client != clients.end())
 	{
-		client->setNick(input[1]);
-		std::string msg = ":yrio!~yrio@localhost NICK :" + client->getNick() + "\r\n";
-		send(fd, msg.c_str(), msg.length(), 0);
-		// messageFromServer(fd, "Nick name set to " + input[1] + "\n");
-		std::cout << "Nick name set to " << input[1] << std::endl;
+		if (isValidNickname(input[1]))
+		{
+			std::string oldNick = client->getNick();
+			std::cout << "OLDNICK: " << client->getNick() << std::endl;
+			client->setNick(input[1]);
+			std::string msg = ":" + oldNick + "!~yrio@localhost NICK " + client->getNick() + "\r\n";
+			send(fd, msg.c_str(), msg.length(), 0);
+			std::cout << "Nick name set to " << input[1] << std::endl;
+		}
+		else
+			return (reply(fd, ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));
+
+        // ERR_NICKNAMEINUSE              
+        // ERR_UNAVAILRESOURCE            
 	}
+}
+void	Server::pong(const int fd, std::string token)
+{
+	const std::string message = "PONG " + token + "\r\n";
+	send(fd, &message, message.size(), 0);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)
@@ -169,6 +212,7 @@ void	Server::invite(const int& fd, const std::vector<std::string>& usersToInvite
 		{
 			getClient(usersToInvite[i])->addInvitation(getClient(fd)->getChannel());
 			messageFromServer(fd, "You invited " + usersToInvite[i] + " to the channel " + getClient(fd)->getChannel() + "\n");
+			reply(fd, RPL_INVITING, getClient(fd)->getChannel() + " " + usersToInvite[i]);
 		}
 	}
 }
@@ -183,7 +227,6 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 			reply(fd, RPL_NOTOPIC, getClient(fd)->getChannel() + " :No topic is set");
 		else
 			reply(fd, RPL_TOPIC, getClient(fd)->getChannel() + " :" + getChannel(getClient(fd)->getChannel())->getTopic());
-		// messageFromServer(fd, "The topic of the channel " + getClient(fd)->getChannel() + " is " + getChannel(getClient(fd)->getChannel())->getTopic() + "\n");
 		return;
 	}
 	if (!getClient(fd)->isAdmin() && getChannel(getClient(fd)->getChannel())->isTopicRestriction())
