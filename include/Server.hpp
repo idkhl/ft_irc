@@ -94,10 +94,10 @@ class	Server
 		void AcceptIncomingClient();
 		void ReceiveDataClient(int fd);
 		void	handleCmd(const int& fd, char *buff);
-		void	nick(const int& fd, const std::vector<std::string>& input);
-		void	user(const int& fd, const std::vector<std::string>& input);
+		void	nick(const int& fd, const std::vector<std::string>& input, int index);
+		void	user(const int& fd, const std::vector<std::string>& input, int index);
 		void	quit(const int& fd);
-		void	pass(const int& fd, const std::vector<std::string>& input);
+		void	pass(const int& fd, const std::vector<std::string>& input, int index);
 		void	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
 		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
@@ -116,7 +116,7 @@ class	Server
 		int		checkChannelPassword(const int& fd, std::string channel, const std::string& input);
 		void	addOperator(char sign, const int& fd, std::vector<std::string>& input);
 		void	addUserLimit(char sign, const int& fd, std::vector<std::string>& input);
-		void	check_pass(const int& fd, std::vector<std::string> input);
+		void	check_connexion(const int& fd, std::vector<std::string> input);
 
 		std::vector<std::string> getUserInput(const int& fd);
 

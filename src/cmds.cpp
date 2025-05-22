@@ -75,13 +75,13 @@ void	Server::quit(const int& fd)
 	ClearClients(fd);
 }
 
-void	Server::pass(const int& fd, const std::vector<std::string>& input)
+void	Server::pass(const int& fd, const std::vector<std::string>& input, int index)
 {
-	if (input.size() == 1)
+	if (input.size() == 1 || getClient(fd)->isAllowed() == true)
 		return ;
 	if (getClient(fd)->isConnected() == true)
 		return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
-	if (strcmp(input[1].c_str(), Mdp))
+	if (strcmp(input[index].c_str(), Mdp))
 	{
 		std::cout << "Wrong password" << std::endl;
 		reply(fd, ERR_PASSWDMISMATCH, ":Password incorrect");
@@ -92,36 +92,41 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Good password" << std::endl;
 		messageFromServer(fd, "You are connected!\n");
 		getClient(fd)->setConnexion(true);
-		getClient(fd)->setAuthorization(fd, true);
+		if (!getClient(fd)->getNick().empty() && !getClient(fd)->getUser().empty())
+			getClient(fd)->setAuthorization(fd, true);
 	}
 }
 
-void	Server::user(const int& fd, const std::vector<std::string>& input)
+void	Server::user(const int& fd, const std::vector<std::string>& input, int index)
 {
-	if (input.size() == 1)
+	if (input.size() == 1 || getClient(fd)->isAllowed() == true)
 		return;
 	std::vector<Client>::iterator client = getClient(fd);
 	if (client != clients.end())
 	{
-		client->setUser(input[1]);
+		client->setUser(input[index]);
 		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
-		std::cout << "User name set to " << input[1] << std::endl;
+		std::cout << "User name set to " << input[index] << std::endl;
 		// messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
+		if (getClient(fd)->isConnected() == true && !getClient(fd)->getNick().empty() && !getClient(fd)->getUser().empty())
+			getClient(fd)->setAuthorization(fd, true);
 	}
 }
 
-void	Server::nick(const int& fd, const std::vector<std::string>& input)
+void	Server::nick(const int& fd, const std::vector<std::string>& input, int index)
 {
-	if (input.size() == 1)
+	if (input.size() == 1 || getClient(fd)->isAllowed() == true)
 		return;
 	std::vector<Client>::iterator client = getClient(fd); 
 	if (client != clients.end())
 	{
-		client->setNick(input[1]);
+		client->setNick(input[index]);
 		std::string msg = ":yrio!~yrio@localhost NICK :" + client->getNick() + "\r\n";
 		send(fd, msg.c_str(), msg.length(), 0);
 		// messageFromServer(fd, "Nick name set to " + input[1] + "\n");
-		std::cout << "Nick name set to " << input[1] << std::endl;
+		std::cout << "Nick name set to " << input[index] << std::endl;
+		if (getClient(fd)->isConnected() == true && !getClient(fd)->getNick().empty() && !getClient(fd)->getUser().empty())
+			getClient(fd)->setAuthorization(fd, true);
 	}
 }
 

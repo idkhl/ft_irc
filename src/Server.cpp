@@ -80,15 +80,47 @@ void Server::AcceptIncomingClient()
 	std::cout << GREEN << "Client <" << incofd << "> Connected" << WHITE << std::endl;
 }
 
-void	Server::check_pass(const int& fd, std::vector<std::string> input)
+void	Server::check_connexion(const int& fd, std::vector<std::string> input)
 {
-	if (input.size() > 2 && input[2] == "PASS" && input[3] == Mdp)
+	if (input[0] == "CAP" && input.size() < 3)
+		return ;
+	else if (input[0] == "CAP" && input.size() > 3 && input[2] == "NICK")
+		std::cout << "PASSWORD AND NICKNAME REQUIRED" << std::endl;
+	else if (input[0] == "CAP" && input.size() == 4 && input[2] == "PASS")
+		pass(fd, input, 3);
+	else if (input[0] == "CAP" && input.size() == 6 && input[2] == "PASS")
 	{
-		std::cout << "Good password" << std::endl;
-		messageFromServer(fd, "You are connected!\n");
-		getClient(fd)->setConnexion(true);
-		getClient(fd)->setAuthorization(fd, true);
+		pass(fd, input, 3);
+		nick(fd, input, 5);
 	}
+	else if (input[0] == "CAP" && input.size() == 12)
+	{
+		pass(fd, input, 3);
+		nick(fd, input, 5);
+		user(fd, input, 7);
+	}
+	else if (input[0] == "PASS" && input.size() == 4)
+	{
+		pass(fd, input, 1);
+		nick(fd, input, 3);
+	}
+	else if (input[0] == "PASS" && input.size() == 10)
+	{
+		pass(fd, input, 1);
+		nick(fd, input, 3);
+		user(fd, input, 5);
+	}
+	else if (input[0] == "NICK" && input.size() == 8)
+	{
+		nick(fd, input, 1);
+		user(fd, input, 3);
+	}
+	else if (input[0] == "PASS" && input.size() == 2)
+		pass(fd, input, 1);
+	else if (input[0] == "NICK" && input.size() == 2 && getClient(fd)->isConnected() == true)
+		nick(fd, input, 1);
+	else if ((input[0] == "USER" || input[0] == "USERHOST") && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected() == true)
+		user(fd, input, 1);
 }
 
 static std::vector<std::string>	splitInput(std::string str)
@@ -122,14 +154,8 @@ void	Server::handleCmd(const int& fd, char *buff)
 	std::vector<std::string> input = splitInput(buff);
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
-	if (cmd == "CAP")
-		return (check_pass(fd, input));
-	else if (cmd == "PASS")
-		pass(fd, input);
-	else if (cmd == "NICK" && getClient(fd)->isConnected() == true)
-		nick(fd, input);
-	else if ((cmd == "USER" || cmd == "USERHOST") && getClient(fd)->isConnected() == true)
-		user(fd, input);
+	if (cmd == "CAP" || cmd == "PASS" || cmd == "NICK" || cmd == "USER")
+		return (check_connexion(fd, input));
 	else if (cmd == "QUIT")
 		quit(fd);
 	else if (cmd == "JOIN")
