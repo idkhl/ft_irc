@@ -106,6 +106,7 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 
 void	Server::user(const int& fd, const std::vector<std::string>& input)
 {
+	std::cout << "USER()" << std::endl;
 	if (input.size() == 1)
 		return (reply(fd, ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	std::vector<Client>::iterator client = getClient(fd);
@@ -114,7 +115,7 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 		if (client->isAllowed())
 			return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
 		client->setUser(input[1]);
-		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
+		// std::string msg = ":idakhlao!~idakhlao@localhost USER :" + client->getUser() + "\r\n";
 		std::cout << "User name set to " << input[1] << std::endl;
 		// messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
 	}
@@ -157,7 +158,7 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 			std::string oldNick = client->getNick();
 			std::cout << "OLDNICK: " << client->getNick() << std::endl;
 			client->setNick(input[1]);
-			std::string msg = ":" + oldNick + "!~yrio@localhost NICK " + client->getNick() + "\r\n";
+			std::string msg = ":" + oldNick + "!~idakhlao@localhost NICK " + client->getNick() + "\r\n";
 			send(fd, msg.c_str(), msg.length(), 0);
 			std::cout << "Nick name set to " << input[1] << std::endl;
 		}
@@ -239,24 +240,48 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 
 void	Server::msg(const int& fd, const std::vector<std::string>& input)
 {
-	if (getClient(fd)->isAllowed() == false)
+	if (!getClient(fd)->isAllowed())
 	{
 		messageFromServer(fd, "You have to enter the password, username and nickname first\n");
 		return;
 	}
-	if (input.size() <= 2)
-		return;
-	if (getClient(input[1]) == clients.end())
+	if (input.size() < 3)
 	{
-		messageFromServer(fd, "There is no user named " + input[1] + '\n');
+		reply(fd, ERR_NEEDMOREPARAMS, "PRIVMSG :Not enough parameters");
 		return;
 	}
+
+	std::string target = input[1];
 	std::string message;
-	for (size_t i = 2 ; i < input.size() ; i++)
+	for (size_t i = 2; i < input.size(); ++i)
 	{
+		if (!message.empty())
+			message += " ";
 		message += input[i];
-		if (i != input.size() - 1)
-			message += ' ';
 	}
-	send(getClient(input[1])->getFd(), message.c_str(), message.size(), 0);
+
+	std::vector<Channel>::iterator chanIt = getChannel(target);
+	if (chanIt != _channels.end())
+	{
+		std::vector<Client*> members = chanIt->getClients();
+		for (size_t i = 0; i < members.size(); ++i)
+		{
+			if (members[i]->getFd() != fd)
+			{
+				std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
+				send(members[i]->getFd(), channelMsg.c_str(), channelMsg.size(), 0);
+			}
+		}
+		return;
+	}
+
+	std::vector<Client>::iterator userIt = getClient(target);
+	if (userIt != clients.end())
+	{
+		std::string privMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
+		send(userIt->getFd(), privMsg.c_str(), privMsg.size(), 0);
+		return;
+	}
+
+	reply(fd, ERR_NOSUCHNICK, target + " :No such nick/channel");
 }

@@ -45,7 +45,7 @@ class	Channel
 		Client						*getClient(const int& fd);
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
 		const std::string&			getTopic(void) const { return _topic; }
-		
+		const std::vector<Client *>     &getClients() const {return _clients;}
 		const bool&					isInviteOnly(void) const { return _inviteMode; }
 		const bool&					isTopicRestriction(void) const { return _topicRestriction; }
 		std::string&				getPassword() {return _password;}
