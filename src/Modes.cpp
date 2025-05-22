@@ -98,7 +98,6 @@ void	Server::addOperator(char sign, const std::string& channelName, const int& f
 	std::vector<Client>::iterator clientIt = getClient(input[0]);
 	if (clientIt == clients.end())
 		return;
-	Client* client = &(*clientIt);
 	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel == _channels.end())
 		return;

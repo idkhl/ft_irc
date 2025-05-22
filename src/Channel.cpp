@@ -37,13 +37,6 @@ void	Channel::deleteClient(const int& fd)
 	}
 }
 
-void	Channel::deleteAdmin(const int& fd)
-{
-	std::vector<int>::iterator client = std::find(_adminFds.begin(),_adminFds.end(), fd);
-	if (client != _adminFds.end())
-		_adminFds.erase(client);
-}
-
 Client	*Channel::getClient(const int& fd)
 {
 	for (size_t i = 0 ; i < _clients.size() ; i++)
@@ -80,6 +73,13 @@ Client	*Channel::getAdmin(const std::string& userName)
 
 void	Channel::addClient(Client& client)
 {
-	if (getClient(client.getFd()) == NULL)
+	if (getClient(client.getFd()) == NULL && getClientCount() < _clientLimit)
 		_clients.push_back(&client);
+}
+
+void	Channel::deleteAdmin(const int& fd)
+{
+	std::vector<int>::iterator admin = std::find(_adminFds.begin(), _adminFds.end(), fd);
+	if (admin != _adminFds.end())
+		_adminFds.erase(admin);
 }

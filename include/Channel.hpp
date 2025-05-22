@@ -63,8 +63,9 @@ class	Channel
 		void			setTopic(const std::string& topic) { _topic = topic; }
 		void			setClientLimit(size_t limit) {_clientLimit = limit;}
 		void			sendMessage(const std::string& message) const;
-		void			join(Client& client);
+
+		void			addClient(Client& client);
+		void 			addAdmin(int fd) { if (std::find(_adminFds.begin(), _adminFds.end(), fd) == _adminFds.end()) _adminFds.push_back(fd); }
 		void			deleteClient(const int& fd);
-		void 			addAdminFd(int fd) { if (std::find(_adminFds.begin(), _adminFds.end(), fd) == _adminFds.end()) _adminFds.push_back(fd); }
-		void 			removeAdminFd(int fd) { std::vector<int>::iterator it = std::find(_adminFds.begin(), _adminFds.end(), fd); if (it != _adminFds.end()) _adminFds.erase(it); }
+		void			deleteAdmin(const int& fd);
 };

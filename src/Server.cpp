@@ -111,11 +111,11 @@ static std::vector<std::string> splitInput(std::string str)
 
 void	Server::handleCmd(const int& fd, char *buff)
 {
-    std::vector<std::string> input = splitInput(buff);
-    if (input.empty())
-        return;
-    std::string cmd = input[0];
-    std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
+	std::vector<std::string> input = splitInput(buff);
+	if (input.empty())
+	    return;
+	std::string cmd = input[0];
+	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
 	// std::cout << "LAAAAAA  " + cmd << std::endl;
 	if (cmd == "CAP")
 		return;
@@ -131,8 +131,8 @@ void	Server::handleCmd(const int& fd, char *buff)
 			join(fd, input);
 	else if (cmd == "PING")
 		pong(fd, input[1]);
-	else if (cmd == "PART")
-		part(fd);
+	// else if (cmd == "PART")
+	// 	part(fd);
 	else if (cmd == "KICK")
 		kick(fd, input);
 	else if (cmd == "INVITE")
@@ -146,8 +146,8 @@ void	Server::handleCmd(const int& fd, char *buff)
 		topic(fd, input);
 	else if (cmd == "MSG")
 		msg(fd, input);
-	else
-		broadcastToChannel(fd, constructMessage(fd, buff));
+	// else
+	// 	broadcastToChannel(fd, constructMessage(fd, buff));
 }
 
 std::string	Server::constructMessage(const int& fd, const char *buff)
@@ -168,12 +168,6 @@ std::string	Server::constructMessage(const int& fd, const char *buff)
 // 	if (channel != _channels.end())
 // 		channel->sendMessage(message);
 // }
-
-static void	slideToTheLeft(std::string& str, const size_t& index)
-{
-	for (size_t i = index ; i < str.size() - 1 ; i++)
-		str[i] = str[i + 1];
-}
 
 std::vector<std::string> Server::getUserInput(const int& fd)
 {
@@ -236,6 +230,8 @@ void Server::ReceiveDataClient(int fd)
 	memset(buff, 0, sizeof(buff));
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
+
+	std::cout << "buffer: " << buff;
 
 	if (bytes <= 0)
 	{

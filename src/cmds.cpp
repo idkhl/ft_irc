@@ -46,7 +46,7 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 			if (input.size() != 3)
 			{
 				reply(fd, ERR_BADCHANNELKEY, channelName + " :Cannot join channel (+k)");
-				return;
+				return "";
 			}
 			if (strcmp(input[2].c_str(), (getChannel(channelName)->getPassword()).c_str()) != 0)
 			{
@@ -55,7 +55,7 @@ std::string	Server::join(const int& fd, const std::vector<std::string>& input)
 				return "";
 			}
 		}
-		getChannel(channelName)->join(*getClient(fd));
+		getChannel(channelName)->addClient(*getClient(fd));
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
@@ -114,11 +114,6 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 			messageFromServer(fd, "You already have a username: " + client->getUser() + '\n');
 			return;
 		}
-		if (getClient(input[1]) != clients.end())
-		{
-			messageFromServer(fd, "This username is already used\n");
-			return;
-		}
 		client->setUser(input[1]);
 		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
 		std::cout << "User name set to " << input[1] << std::endl;
@@ -136,9 +131,14 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, "You have to enter the password first (/PASS <password>)\n");
 		return;
 	}
-	if (client->getUser().empty())
+	// if (client->getUser().empty())
+	// {
+	// 	messageFromServer(fd, "You have to enter your username first (/USER <username>)\n");
+	// 	return;
+	// }
+	if (getClient(input[1]) != clients.end())
 	{
-		messageFromServer(fd, "You have to enter your username first (/USER <username>)\n");
+		messageFromServer(fd, "This nickname is already used\n");
 		return;
 	}
 	if (input.size() == 1)
@@ -286,18 +286,6 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 	messageFromServer(getClient(input[1])->getFd(), '[' + getClient(fd)->getNick() + "] " + message + '\n');
 }
 
-void	Server::list(const int& fd)
-{
-	messageFromServer(fd, "List of the channels on the server:\n");
-	for (size_t i = 0 ; i < _channels.size() ; i++)
-		messageFromServer(fd, "- " + _channels[i].getName() + " -> " + _channels[i].getTopic() + '\n');
-}
-
-void	Server::help(const int& fd)
-{
-	messageFromServer(fd, "List of the commands :\n- /PASS <password>\t\tEnter the server's password\n- /USER <username>\t\tEnter your username\n- /NICK <nickname>\t\tEnter your nickname\n- /JOIN <channel>\t\tCreate/Join a channel\n- /MSG <username> <message>\tSend a private message to a user\n- /MODE <mode>\t\t\tChange the mode of the current channel\n- /INVITE <username> <channel>\tInvite a user in a channel\n- /LIST\t\t\t\tDisplay the list of the channels\n- /KICK <username> <channel>\tKick a user from a channel\n- /PART\t\t\t\tQuit the current channel\n- /QUIT\t\t\t\tQuit the server\n- /TOPIC <topic>\t\tDisplay the topic of the current channel (without argument)/Change the topic of the current channel\n");
-}
-
 void	Server::mode(const int& fd, const std::vector<std::string>& input)
 {
 	if (getClient(fd)->isConnected() == false)
@@ -306,6 +294,11 @@ void	Server::mode(const int& fd, const std::vector<std::string>& input)
 		return;
 	}
 	std::string channelName = input[1];
+	if (getChannel(channelName) == _channels.end())
+	{
+		messageFromServer(fd, "There is no channel named " + channelName + "\n");
+		return;
+	}
 	if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)
 	{
 		messageFromServer(fd, "You have to be an operator to use /MODE\n");
