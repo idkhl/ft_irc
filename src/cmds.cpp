@@ -83,10 +83,12 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input, int inde
 		return (reply(fd, ERR_NEEDMOREPARAMS, input[0] + " :Not enough parameters"));
 	if (getClient(fd)->isConnected() == true)
 		return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
-	if (strcmp(input[index].c_str(), Mdp))
+	size_t pos = input[index].find('\r', 0);
+	std::string sub_mdp = input[index].substr(0, pos);
+	if (strcmp(sub_mdp.c_str(), Mdp))
 	{
 		std::cout << "Wrong password" << std::endl;
-		reply(fd, ERR_PASSWDMISMATCH, ":Password incorrect");
+		reply(fd, ERR_PASSWDMISMATCH, " :Password incorrect");
 		//messageFromServer(fd, "Wrong password!\n");
 	}
 	else
@@ -127,18 +129,16 @@ bool isValidNickname(const std::string& nickname)
 {
     if (nickname.empty() || nickname.size() > 9)
         return false;
-
     char first = nickname[0];
     if (!std::isalpha(first) && !isSpecial(first))
         return false;
-
     for (size_t i = 1; i < nickname.size(); ++i) {
         char c = nickname[i];
         if (!std::isalpha(c) && !std::isdigit(c) && !isSpecial(c) && c != '-') {
+			std::cout << "Test 3" << std::endl;
             return false;
         }
     }
-
     return true;
 }
 
@@ -149,14 +149,16 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 	std::vector<Client>::iterator client = getClient(fd); 
 	if (client != clients.end())
 	{
-		if (isValidNickname(input[index]))
+		size_t pos = input[index].find('\r', 0);
+		std::string sub_nick = input[index].substr(0, pos);
+		if (isValidNickname(sub_nick))
 		{
 			std::string oldNick = client->getNick();
-			std::cout << "OLDNICK: " << client->getNick() << std::endl;
-			client->setNick(input[index]);
+			// std::cout << "OLDNICK: " << client->getNick() << std::endl;
+			client->setNick(sub_nick);
 			std::string msg = ":" + oldNick + "!~yrio@localhost NICK " + client->getNick() + "\r\n";
 			send(fd, msg.c_str(), msg.length(), 0);
-			std::cout << "Nick name set to " << input[1] << std::endl;
+			std::cout << "Nick name set to " << sub_nick << std::endl;
 		}
 		else
 			return (reply(fd, ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));

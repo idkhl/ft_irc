@@ -217,7 +217,6 @@ void Server::ReceiveDataClient(int fd)
 		std::cout << "buff : " << buff << std::endl;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		handleCmd(fd, buff);
-		std::cout << "buffer: " << buff << std::endl;
 	}
 }
 
