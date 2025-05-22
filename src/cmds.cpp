@@ -67,7 +67,8 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		getChannel(channelName)->join(*getClient(fd));
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
-		reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
+		if (!getChannel(channelName)->getTopic().empty())
+			reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
 		reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
 	}
 	// if (getChannel(channelName)->getTopic().empty())

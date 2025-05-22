@@ -143,7 +143,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 	}
 	else if (cmd == "TOPIC")
 		topic(fd, input);
-	else if (cmd == "PRIVMSG")
+	else if (cmd == "MSG")
 		msg(fd, input);
 	else
 		broadcastToChannel(fd, constructMessage(fd, buff));
@@ -281,6 +281,6 @@ void Server::ClearClients(int fd)
 void	reply(int fd, std::string code, std::string msg)
 {
 	std::string response = ":localhost " + code;
-	response += msg + "\r\n";
+	response += " yrio" + msg + "\r\n";
 	send(fd, response.c_str(), response.length(), 0);
 }
