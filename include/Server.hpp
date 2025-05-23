@@ -97,10 +97,10 @@ class	Server
 		void				ReceiveDataClient(int fd);
 		int				ParseData(int fd, char *buff);
 		void				handleCmd(const int& fd, char *buff);
-		void				nick(const int& fd, const std::vector<std::string>& input);
-		void				user(const int& fd, const std::vector<std::string>& input);
+		void				nick(const int& fd, const std::vector<std::string>& input, int index);
+		void				user(const int& fd, const std::vector<std::string>& input, int index);
 		void				quit(const int& fd);
-		void				pass(const int& fd, const std::vector<std::string>& input);
+		void				pass(const int& fd, const std::vector<std::string>& input, int index);
 		std::string			join(const int& fd, const std::vector<std::string>& input);
 		void				part(const int& fd);
 		void				pong(const int fd, std::string token);
@@ -119,6 +119,7 @@ class	Server
 		int				checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
 		void				addOperator(char sign, const std::string& channelName, const int& fd, std::vector<std::string>& input);
 		void				addUserLimit(char sign, const std::string& channelName, std::vector<std::string>& input);
+		void				check_connexion(const int& fd, std::vector<std::string> input);
 
 		void				deleteChannel(const std::string& channelName);
 		void				deleteChannel(std::vector<Channel>::iterator channel) { _channels.erase(channel); }

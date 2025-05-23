@@ -81,7 +81,50 @@ void Server::AcceptIncomingClient()
 	messageFromServer(incofd, "WELCOME IN FT_IRC!\nEnter your USERNAME, NICKNAME and PASSWORD\n");
 }
 
-static std::vector<std::string> splitInput(std::string str)
+void	Server::check_connexion(const int& fd, std::vector<std::string> input)
+{
+	if (input[0] == "CAP" && input.size() < 3)
+		return ;
+	else if (input[0] == "CAP" && input.size() > 3 && input[2] == "NICK")
+		std::cout << "PASSWORD AND NICKNAME REQUIRED" << std::endl;
+	else if (input[0] == "CAP" && input.size() == 4 && input[2] == "PASS")
+		pass(fd, input, 3);
+	else if (input[0] == "CAP" && input.size() == 6 && input[2] == "PASS")
+	{
+		pass(fd, input, 3);
+		nick(fd, input, 5);
+	}
+	else if (input[0] == "CAP" && input.size() == 12)
+	{
+		pass(fd, input, 3);
+		nick(fd, input, 5);
+		user(fd, input, 7);
+	}
+	else if (input[0] == "PASS" && input.size() == 4)
+	{
+		pass(fd, input, 1);
+		nick(fd, input, 3);
+	}
+	else if (input[0] == "PASS" && input.size() == 10)
+	{
+		pass(fd, input, 1);
+		nick(fd, input, 3);
+		user(fd, input, 5);
+	}
+	else if (input[0] == "NICK" && input.size() == 8)
+	{
+		nick(fd, input, 1);
+		user(fd, input, 3);
+	}
+	else if (input[0] == "PASS" && input.size() == 2)
+		pass(fd, input, 1);
+	else if (input[0] == "NICK" && input.size() == 2 && getClient(fd)->isConnected() == true)
+		nick(fd, input, 1);
+	else if ((input[0] == "USER" || input[0] == "USERHOST") && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected() == true)
+		user(fd, input, 1);
+}
+
+static std::vector<std::string>	splitInput(std::string str)
 {
 	if (str.size() >= 2 && str.substr(str.size() - 2) == "\r\n")
 		str.erase(str.size() - 2);
@@ -91,7 +134,6 @@ static std::vector<std::string> splitInput(std::string str)
 		if (str[i] == '\n')
 			str[i] = ' ';
 	}
-
 	std::vector<std::string> result;
 	size_t start = 0;
 	while (start < str.size())
@@ -113,41 +155,35 @@ void	Server::handleCmd(const int& fd, char *buff)
 {
 	std::vector<std::string> input = splitInput(buff);
 	if (input.empty())
-	    return;
+        return;
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
-	// std::cout << "LAAAAAA  " + cmd << std::endl;
-	if (cmd == "CAP")
-		return;
-	else if (cmd == "PASS")
-		pass(fd, input);
-	else if (cmd == "NICK" && getClient(fd)->isConnected() == true)
-		nick(fd, input);
-	else if ((cmd == "USER" || cmd == "USERHOST") && getClient(fd)->isConnected() == true)
-		user(fd, input);
+	if (cmd == "CAP" || cmd == "PASS" || cmd == "NICK" || cmd == "USER")
+		return (check_connexion(fd, input));
 	else if (cmd == "QUIT")
 		quit(fd);
 	else if (cmd == "JOIN")
-			join(fd, input);
+		join(fd, input);
+	if (_channels.size() == 0)
+		return ;
+	if (cmd == "PRIVMSG")
+		msg(fd, input);
 	else if (cmd == "PING")
 		pong(fd, input[1]);
-	// else if (cmd == "PART")
-	// 	part(fd);
+	else if (cmd == "PART")
+		part(fd);
 	else if (cmd == "KICK")
 		kick(fd, input);
 	else if (cmd == "INVITE")
 		invite(fd, input);
 	else if (cmd == "MODE")
-	{
-		std::cout << "tests " << input[0] << std::endl;
 		mode(fd, input);
-	}
 	else if (cmd == "TOPIC")
 		topic(fd, input);
-	else if (cmd == "MSG")
-		msg(fd, input);
-	// else
-	// 	broadcastToChannel(fd, constructMessage(fd, buff));
+	else if (cmd == "PING")
+		pong(fd, input[1]);
+	else
+		broadcastToChannel(fd, constructMessage(fd, buff));
 }
 
 std::string	Server::constructMessage(const int& fd, const char *buff)
@@ -162,67 +198,12 @@ std::string	Server::constructMessage(const int& fd, const char *buff)
 	return message;
 }
 
-// void	Server::broadcastToChannel(const int& fd, const std::string& message)
-// {
-// 	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
-// 	if (channel != _channels.end())
-// 		channel->sendMessage(message);
-// }
-
-std::vector<std::string> Server::getUserInput(const int& fd)
+void	Server::broadcastToChannel(const int& fd, const std::string& message)
 {
-    char buffer[1024];
-    memset(buffer, 0, sizeof(buffer));
-
-    struct pollfd pfd;
-    pfd.fd = fd;
-    pfd.events = POLLIN;
-
-    int pollResult = poll(&pfd, 1, 5000);
-    if (pollResult <= 0)
-    {
-        std::cout << "Timeout or error while waiting for input from client <" << fd << ">." << std::endl;
-        return std::vector<std::string>();
-    }
-
-    ssize_t bytes = recv(fd, buffer, sizeof(buffer) - 1, 0);
-    if (bytes <= 0)
-    {
-        std::cout << "Failed to receive input from client <" << fd << ">." << std::endl;
-        return std::vector<std::string>();
-    }
-
-    buffer[bytes] = '\0';
-    std::cout << "Received input from client <" << fd << ">: " << buffer << std::endl;
-    return splitInput(std::string(buffer));
+	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+	if (channel != _channels.end())
+		channel->sendMessage(message);
 }
-
-// void	Server::ParseData(int fd, char *buff)
-// {
-// 	std::vector<std::string> input = splitInput(buff);
-// 	std::transform(input[0].begin(), input[0].end(), input[0].begin(), toupper);
-// 	std::cout << "buff : " << buff << std::endl;
-// 	if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
-// 		input[0] = "/" + input[0];
-// 	std::cout << "input : " << input[0] << std::endl;
-// 	handleCmd(fd, input, buff);
-// }
-
-// int	detect_irssi(char *buff)
-// {
-// 	std::string str;
-// 	std::string str2;
-// 	str2 = "CAP LS";
-// 	int i = 0;
-// 	while (buff[i] != '\n')
-// 	{
-// 		str[i] = buff[i];
-// 		i++;
-// 	}
-// 	if (str.find(str2, 0))
-// 		return (1);
-// 	return (0);
-// }
 
 void Server::ReceiveDataClient(int fd)
 {
@@ -242,6 +223,7 @@ void Server::ReceiveDataClient(int fd)
 	else
 	{
 		buff[bytes] = '\0';
+		std::cout << "buff : " << buff << std::endl;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		handleCmd(fd, buff);
 	}
