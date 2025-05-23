@@ -153,6 +153,8 @@ static std::vector<std::string>	splitInput(std::string str)
 void	Server::handleCmd(const int& fd, char *buff)
 {
 	std::vector<std::string> input = splitInput(buff);
+	if (input.empty())
+        return;
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
 	if (cmd == "CAP" || cmd == "PASS" || cmd == "NICK" || cmd == "USER")
@@ -161,11 +163,11 @@ void	Server::handleCmd(const int& fd, char *buff)
 		quit(fd);
 	else if (cmd == "JOIN")
 		join(fd, input);
-	else if (cmd == "MSG")
-		msg(fd, input);
 	if (_channels.size() == 0)
 		return ;
-	if (cmd == "PART")
+	if (cmd == "PRIVMSG")
+			msg(fd, input);
+	else if (cmd == "PART")
 		part(fd);
 	else if (cmd == "KICK")
 		kick(fd, input);
@@ -175,6 +177,8 @@ void	Server::handleCmd(const int& fd, char *buff)
 		mode(fd, input);
 	else if (cmd == "TOPIC")
 		topic(fd, input);
+	else if (cmd == "PING")
+		pong(fd, input[1]);
 	else
 		broadcastToChannel(fd, constructMessage(fd, buff));
 }
