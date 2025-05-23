@@ -64,7 +64,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
 	if (!getChannel(channelName)->getTopic().empty())
 		reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
-	reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
+	// reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
 }
 
 void	Server::quit(const int& fd)
@@ -149,8 +149,8 @@ bool	isValidNickname(const std::string& nickname)
 void	Server::nick(const int& fd, const std::vector<std::string>& input, int index)
 {
 	std::vector<Client>::iterator client = getClient(fd);
-	if (client == clients.end())
-		return (reply(fd, ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));
+	// if (client == clients.end())
+	// 	return (reply(fd, ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));
 	if (client->isConnected() == false)
 	{
 		messageFromServer(fd, "You have to enter the password first (/PASS <password>)\n");
@@ -168,7 +168,7 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 	}
 	if (input.size() == 1)
 		return (reply(fd, ERR_NONICKNAMEGIVEN, ":No nickname given"));
-	std::vector<Client>::iterator client = getClient(fd); 
+	// std::vector<Client>::iterator client = getClient(fd); 
 	if (client != clients.end())
 	{
 		size_t pos = input[index].find('\r', 0);
@@ -178,7 +178,10 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 			std::string oldNick = client->getNick();
 			client->setNick(sub_nick);
 			if (oldNick.empty())
-				sendToIrssi(fd, "NICK " + sub_nick);
+			{
+				std::string msg = ":" + client->getNick() + "!" + client->getUser() + "@localhost NICK " + client->getNick();
+				sendToIrssi(fd, msg);
+			}
 			else
 			{
 				std::string msg = ":" + oldNick + "!" + client->getUser() + "@localhost NICK " + client->getNick();
@@ -194,6 +197,7 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
         // ERR_UNAVAILRESOURCE            
 	}
 }
+
 void	Server::pong(const int fd, std::string token)
 {
 	const std::string message = "PONG " + token + "\r\n";

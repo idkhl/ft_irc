@@ -168,8 +168,8 @@ void	Server::handleCmd(const int& fd, char *buff)
 		return ;
 	if (cmd == "PRIVMSG")
 		msg(fd, input);
-	else if (cmd == "PART")
-		part(fd);
+	// else if (cmd == "PART")
+	// 	part(fd);
 	else if (cmd == "KICK")
 		kick(fd, input);
 	else if (cmd == "INVITE")
@@ -203,7 +203,7 @@ void Server::ReceiveDataClient(int fd)
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
 
-	std::cout << "buffer: " << buff;
+	// std::cout << "buffer: " << buff;
 
 	if (bytes <= 0)
 	{
