@@ -30,6 +30,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 			getChannel(getClient(fd)->getChannel())->deleteClient(fd);
 		getClient(fd)->setChannel(channelName);
 		_channels.push_back(Channel(*getClient(fd), channelName));
+		sendToIrssi(fd, ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@localhost JOIN " + channelName);
 		std::cout << "Channel " << channelName << " created!" << std::endl;
 		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
 	}
@@ -65,11 +66,31 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		if (std::find(getChannel(channelName)->getAdmins().begin(), getChannel(channelName)->getAdmins().end(), fd) != getChannel(channelName)->getAdmins().end())
 			getClient(fd)->setAdmin(true);
 		getChannel(channelName)->join(*getClient(fd));
+		// sendToIrssi(fd, ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@localhost JOIN " + channelName);
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 		if (!getChannel(channelName)->getTopic().empty())
 			reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
-		reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
+		// reply(fd, RPL_NAMREPLY, "= " + channelName + ": " + getClient(fd)->getNick() + " *");
+		std::string namesReply = "= " + channelName + " :";
+
+		const std::vector<Client*>& clients = getChannel(channelName)->getClients();
+		const std::vector<int>& admins = getChannel(channelName)->getAdmins();
+
+		for (size_t i = 0; i < clients.size(); ++i)
+		{
+			int clientFd = clients[i]->getFd();
+			std::string prefix;
+
+			if (std::find(admins.begin(), admins.end(), clientFd) != admins.end())
+				prefix = "@";
+
+			namesReply += prefix + clients[i]->getNick();
+			if (i != clients.size() - 1)
+				namesReply += " ";
+		}
+		reply(fd, RPL_NAMREPLY, namesReply);
+		reply(fd, RPL_ENDOFNAMES, channelName + " :End of NAMES list.");
 	}
 }
 
@@ -113,7 +134,7 @@ void	Server::user(const int& fd, const std::vector<std::string>& input, int inde
 		if (client->isAllowed())
 			return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
 		client->setUser(input[index]);
-		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
+		// std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
 		std::cout << "User name set to " << input[index] << std::endl;
 		// messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
 		if (getClient(fd)->isConnected() == true && !getClient(fd)->getNick().empty() && !getClient(fd)->getUser().empty())
@@ -156,11 +177,16 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 		if (isValidNickname(sub_nick))
 		{
 			std::string oldNick = client->getNick();
-			// std::cout << "OLDNICK: " << client->getNick() << std::endl;
 			client->setNick(sub_nick);
-			std::string msg = ":" + oldNick + "!~yrio@localhost NICK " + client->getNick() + "\r\n";
-			send(fd, msg.c_str(), msg.length(), 0);
-			std::cout << "Nick name set to " << sub_nick << std::endl;
+			if (oldNick.empty())
+				sendToIrssi(fd, "NICK " + sub_nick);
+			else
+			{
+				std::string msg = ":" + oldNick + "!" + client->getUser() + "@localhost NICK " + client->getNick();
+				sendToIrssi(fd, msg);
+				std::cout << "Nick name set to " << sub_nick << std::endl;
+			}
+			
 		}
 		else
 			return (reply(fd, ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));
@@ -178,7 +204,7 @@ void	Server::pong(const int fd, std::string token)
 void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)
 {
 	if (usersToKick.size() == 1)
-		return;
+		return (reply(fd, ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	if (getClient(fd)->isAdmin() == false)
 	{
 		messageFromServer(fd, "You do not have the right to kick someone\n");
@@ -199,7 +225,7 @@ void	Server::kick(const int& fd, const std::vector<std::string>& usersToKick)
 void	Server::invite(const int& fd, const std::vector<std::string>& usersToInvite)
 {
 	if (usersToInvite.size() == 1)
-		return;
+		return (reply(fd, ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	if (getClient(fd)->isAdmin() == false)
 	{
 		messageFromServer(fd, "You do not have the right to invite someone\n");
@@ -268,7 +294,7 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 		{
 			if (members[i]->getFd() != fd)
 			{
-				std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
+				std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
 				send(members[i]->getFd(), channelMsg.c_str(), channelMsg.size(), 0);
 			}
 		}
@@ -278,7 +304,7 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 	std::vector<Client>::iterator userIt = getClient(target);
 	if (userIt != clients.end())
 	{
-		std::string privMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
+		std::string privMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
 		send(userIt->getFd(), privMsg.c_str(), privMsg.size(), 0);
 		return;
 	}

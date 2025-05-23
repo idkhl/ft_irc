@@ -166,7 +166,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 	if (_channels.size() == 0)
 		return ;
 	if (cmd == "PRIVMSG")
-			msg(fd, input);
+		msg(fd, input);
 	else if (cmd == "PART")
 		part(fd);
 	else if (cmd == "KICK")
@@ -283,9 +283,17 @@ void Server::ClearClients(int fd)
 	}
 }
 
+void	sendToIrssi(int fd, std::string message)
+{
+	std::string msg = ":localhost " + message + "\r\n";
+	std::cout << "SNDTOIRSSI [" << msg << "]" << std::endl;
+	send(fd, msg.c_str(), msg.length(), 0);
+}
+
 void	reply(int fd, std::string code, std::string msg)
 {
 	std::string response = ":localhost " + code;
-	response += " yrio" + msg + "\r\n";
+	response += " " + msg + "\r\n";
+	std::cout << "REPLY [" << response << "]" << std::endl;
 	send(fd, response.c_str(), response.length(), 0);
 }

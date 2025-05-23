@@ -130,3 +130,4 @@ class	Server
 };
 
 void	reply(int fd, std::string code, std::string msg);
+void	sendToIrssi(int fd, std::string message);
