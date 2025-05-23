@@ -35,6 +35,7 @@ class Client
 		bool				isInvitedIn(const std::string& channel) const { return std::find(_invites.begin(), _invites.end(), channel) != _invites.end(); }
 		bool				isAdmin(const Channel& channel) const { return std::find(channel.getAdmins().begin(), channel.getAdmins().end(), Fd) == channel.getAdmins().end() ? false : true; }
 		bool				isInChannel(const std::string& channelName) const { return std::find(_channels.begin(), _channels.end(), channelName) != _channels.end() ? true : false; }
+		const bool&			isAllowed(void) const { return _allowed; }
 
 		void				setInterface(int interface) { this->interface = interface; }
 		void				setNick(const std::string& nick) { _nick = nick; }

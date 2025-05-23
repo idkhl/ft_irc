@@ -47,6 +47,7 @@ class	Channel
 		const std::vector<int>&		getAdmins(void) const { return _adminFds; }
 		Client				*getAdmin(const int& fd);
 		Client				*getAdmin(const std::string& userName);
+		size_t				getNbrAdmins(void) const { return _adminFds.size(); }
 		const std::string&		getTopic(void) const { return _topic; }
 		const std::vector<Client *>     &getClients() const {return _clients;}
 		std::string&			getPassword() {return _password;}

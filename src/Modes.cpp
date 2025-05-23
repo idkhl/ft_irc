@@ -190,3 +190,23 @@ void	Server::parseModes(const int& fd, const std::vector<std::string>& input, co
 			checkModes(fd, input[i], input, channelName);
 	}
 }
+
+void	Server::mode(const int& fd, const std::vector<std::string>& input)
+{
+	std::string channelName = input[1];
+	if (getClient(fd)->isAllowed() == false)
+	{
+		std::cout << "You have to enter the password first" << std::endl;
+		return;
+	}
+	if (input.size() == 1)
+		return;
+	else
+		parseModes(fd, input, channelName);
+	// i: Set/remove Invite-only channel
+	// t: Set/remove the restrictions of the TOPIC command to channel
+	// operators
+	// k: Set/remove the channel key (password)
+	// o: Give/take channel operator privilege
+	// l: Set/remove the user limit to channel
+}

@@ -101,15 +101,14 @@ class	Server
 		void				user(const int& fd, const std::vector<std::string>& input, int index);
 		void				quit(const int& fd);
 		void				pass(const int& fd, const std::vector<std::string>& input, int index);
-		std::string			join(const int& fd, const std::vector<std::string>& input);
+		void				join(const int& fd, const std::vector<std::string>& input);
 		void				part(const int& fd);
 		void				pong(const int fd, std::string token);
 		void				kick(const int& fd, const std::vector<std::string>& usersToKick);
 		void				invite(const int& fd, const std::vector<std::string>& usersToInvite);
 		void				topic(const int& fd, const std::vector<std::string>& input);
 		void				msg(const int& fd, const std::vector<std::string>& input);
-		std::string			constructMessage(const int& fd, const char *buff);
-		void				broadcastToChannel(const int& fd, const std::string& message);
+		void				broadcastToChannel(const std::vector<std::string>& input);
 		void				mode(const int&fd, const std::vector<std::string>& input);
 		void				parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName);
 		void				checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName);

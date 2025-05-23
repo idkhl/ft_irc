@@ -170,8 +170,6 @@ void	Server::handleCmd(const int& fd, char *buff)
 		msg(fd, input);
 	else if (cmd == "PING")
 		pong(fd, input[1]);
-	else if (cmd == "PART")
-		part(fd);
 	else if (cmd == "KICK")
 		kick(fd, input);
 	else if (cmd == "INVITE")
@@ -183,24 +181,16 @@ void	Server::handleCmd(const int& fd, char *buff)
 	else if (cmd == "PING")
 		pong(fd, input[1]);
 	else
-		broadcastToChannel(fd, constructMessage(fd, buff));
+		broadcastToChannel(input);
 }
 
-std::string	Server::constructMessage(const int& fd, const char *buff)
+void	Server::broadcastToChannel(const std::vector<std::string>& input)
 {
+	std::string channelName = input[1];
+	std::vector<Channel>::iterator channel = getChannel(channelName);
 	std::string message;
-	message += '<';
-	// getClient(fd)->isAdmin(*getChannel(getClient(fd)->getChannel())) ? message += '@' : message += ' ';
-	getClient(fd)->getNick().empty() ? message += getClient(fd)->getFd() : message += getClient(fd)->getNick();
-	message += "> ";
-	for (size_t i = 0 ; i < strlen(buff) ; i++)
-		message += buff[i];
-	return message;
-}
-
-void	Server::broadcastToChannel(const int& fd, const std::string& message)
-{
-	std::vector<Channel>::iterator channel = getChannel(getClient(fd)->getChannel());
+	for (size_t i = 2 ; i < input.size() ; i++)
+		message += i == input.size() - 1 ? input[i] : input[i] + ' ';
 	if (channel != _channels.end())
 		channel->sendMessage(message);
 }

@@ -147,7 +147,7 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 {
 	std::vector<Client>::iterator client = getClient(fd);
 	if (client == clients.end())
-		return;
+		return (reply(fd, ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));
 	if (client->isConnected() == false)
 	{
 		messageFromServer(fd, "You have to enter the password first (/PASS <password>)\n");
@@ -165,25 +165,19 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 	}
 	if (input.size() == 1)
 		return (reply(fd, ERR_NONICKNAMEGIVEN, ":No nickname given"));
-	std::vector<Client>::iterator client = getClient(fd); 
-	if (client != clients.end())
+	size_t pos = input[index].find('\r', 0);
+	std::string sub_nick = input[index].substr(0, pos);
+	if (isValidNickname(sub_nick))
 	{
-		size_t pos = input[index].find('\r', 0);
-		std::string sub_nick = input[index].substr(0, pos);
-		if (isValidNickname(sub_nick))
-		{
-			std::string oldNick = client->getNick();
-			// std::cout << "OLDNICK: " << client->getNick() << std::endl;
-			client->setNick(sub_nick);
-			std::string msg = ":" + oldNick + "!~yrio@localhost NICK " + client->getNick() + "\r\n";
-			send(fd, msg.c_str(), msg.length(), 0);
-			std::cout << "Nick name set to " << sub_nick << std::endl;
-		}
-		else
-			return (reply(fd, ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));
-        	// ERR_NICKNAMEINUSE              
-        	// ERR_UNAVAILRESOURCE            
+		std::string oldNick = client->getNick();
+		// std::cout << "OLDNICK: " << client->getNick() << std::endl;
+		client->setNick(sub_nick);
+		std::string msg = ":" + oldNick + "!~yrio@localhost NICK " + client->getNick() + "\r\n";
+		send(fd, msg.c_str(), msg.length(), 0);
+		std::cout << "Nick name set to " << sub_nick << std::endl;
 	}
+	// ERR_NICKNAMEINUSE              
+	// ERR_UNAVAILRESOURCE
 }
 
 void	Server::pong(const int fd, std::string token)
