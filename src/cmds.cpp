@@ -71,12 +71,6 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 			reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
 		reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
 	}
-	// if (getChannel(channelName)->getTopic().empty())
-	// 	reply(fd, RPL_NOTOPIC, channelName + " :No topic is set");
-	// else
-	// 	reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
-	// reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
-	// reply(fd, RPL_ENDOFNAMES, channelName + " :End of user's list.");
 }
 
 void	Server::quit(const int& fd)
@@ -84,16 +78,18 @@ void	Server::quit(const int& fd)
 	ClearClients(fd);
 }
 
-void	Server::pass(const int& fd, const std::vector<std::string>& input)
+void	Server::pass(const int& fd, const std::vector<std::string>& input, int index)
 {
 	if (input.size() == 1)
 		return (reply(fd, ERR_NEEDMOREPARAMS, input[0] + " :Not enough parameters"));
 	if (getClient(fd)->isConnected() == true)
 		return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
-	if (strcmp(input[1].c_str(), Mdp))
+	size_t pos = input[index].find('\r', 0);
+	std::string sub_mdp = input[index].substr(0, pos);
+	if (strcmp(sub_mdp.c_str(), Mdp))
 	{
 		std::cout << "Wrong password" << std::endl;
-		reply(fd, ERR_PASSWDMISMATCH, ":Password incorrect");
+		reply(fd, ERR_PASSWDMISMATCH, " :Password incorrect");
 		//messageFromServer(fd, "Wrong password!\n");
 	}
 	else
@@ -101,11 +97,12 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Good password" << std::endl;
 		messageFromServer(fd, "You are connected!\n");
 		getClient(fd)->setConnexion(true);
-		getClient(fd)->setAuthorization(fd, true);
+		if (!getClient(fd)->getNick().empty() && !getClient(fd)->getUser().empty())
+			getClient(fd)->setAuthorization(fd, true);
 	}
 }
 
-void	Server::user(const int& fd, const std::vector<std::string>& input)
+void	Server::user(const int& fd, const std::vector<std::string>& input, int index)
 {
 	std::cout << "USER()" << std::endl;
 	if (input.size() == 1)
@@ -115,10 +112,12 @@ void	Server::user(const int& fd, const std::vector<std::string>& input)
 	{
 		if (client->isAllowed())
 			return (reply(fd, ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
-		client->setUser(input[1]);
-		// std::string msg = ":idakhlao!~idakhlao@localhost USER :" + client->getUser() + "\r\n";
-		std::cout << "User name set to " << input[1] << std::endl;
+		client->setUser(input[index]);
+		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
+		std::cout << "User name set to " << input[index] << std::endl;
 		// messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
+		if (getClient(fd)->isConnected() == true && !getClient(fd)->getNick().empty() && !getClient(fd)->getUser().empty())
+			getClient(fd)->setAuthorization(fd, true);
 	}
 }
 
@@ -132,36 +131,36 @@ bool isValidNickname(const std::string& nickname)
 {
     if (nickname.empty() || nickname.size() > 9)
         return false;
-
     char first = nickname[0];
     if (!std::isalpha(first) && !isSpecial(first))
         return false;
-
     for (size_t i = 1; i < nickname.size(); ++i) {
         char c = nickname[i];
         if (!std::isalpha(c) && !std::isdigit(c) && !isSpecial(c) && c != '-') {
+			std::cout << "Test 3" << std::endl;
             return false;
         }
     }
-
     return true;
 }
 
-void	Server::nick(const int& fd, const std::vector<std::string>& input)
+void	Server::nick(const int& fd, const std::vector<std::string>& input, int index)
 {
 	if (input.size() == 1)
 		return (reply(fd, ERR_NONICKNAMEGIVEN, ":No nickname given"));
 	std::vector<Client>::iterator client = getClient(fd); 
 	if (client != clients.end())
 	{
-		if (isValidNickname(input[1]))
+		size_t pos = input[index].find('\r', 0);
+		std::string sub_nick = input[index].substr(0, pos);
+		if (isValidNickname(sub_nick))
 		{
 			std::string oldNick = client->getNick();
-			std::cout << "OLDNICK: " << client->getNick() << std::endl;
-			client->setNick(input[1]);
-			std::string msg = ":" + oldNick + "!~idakhlao@localhost NICK " + client->getNick() + "\r\n";
+			// std::cout << "OLDNICK: " << client->getNick() << std::endl;
+			client->setNick(sub_nick);
+			std::string msg = ":" + oldNick + "!~yrio@localhost NICK " + client->getNick() + "\r\n";
 			send(fd, msg.c_str(), msg.length(), 0);
-			std::cout << "Nick name set to " << input[1] << std::endl;
+			std::cout << "Nick name set to " << sub_nick << std::endl;
 		}
 		else
 			return (reply(fd, ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));

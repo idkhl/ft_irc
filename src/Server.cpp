@@ -80,7 +80,50 @@ void Server::AcceptIncomingClient()
 	std::cout << GREEN << "Client <" << incofd << "> Connected" << WHITE << std::endl;
 }
 
-static std::vector<std::string> splitInput(std::string str)
+void	Server::check_connexion(const int& fd, std::vector<std::string> input)
+{
+	if (input[0] == "CAP" && input.size() < 3)
+		return ;
+	else if (input[0] == "CAP" && input.size() > 3 && input[2] == "NICK")
+		std::cout << "PASSWORD AND NICKNAME REQUIRED" << std::endl;
+	else if (input[0] == "CAP" && input.size() == 4 && input[2] == "PASS")
+		pass(fd, input, 3);
+	else if (input[0] == "CAP" && input.size() == 6 && input[2] == "PASS")
+	{
+		pass(fd, input, 3);
+		nick(fd, input, 5);
+	}
+	else if (input[0] == "CAP" && input.size() == 12)
+	{
+		pass(fd, input, 3);
+		nick(fd, input, 5);
+		user(fd, input, 7);
+	}
+	else if (input[0] == "PASS" && input.size() == 4)
+	{
+		pass(fd, input, 1);
+		nick(fd, input, 3);
+	}
+	else if (input[0] == "PASS" && input.size() == 10)
+	{
+		pass(fd, input, 1);
+		nick(fd, input, 3);
+		user(fd, input, 5);
+	}
+	else if (input[0] == "NICK" && input.size() == 8)
+	{
+		nick(fd, input, 1);
+		user(fd, input, 3);
+	}
+	else if (input[0] == "PASS" && input.size() == 2)
+		pass(fd, input, 1);
+	else if (input[0] == "NICK" && input.size() == 2 && getClient(fd)->isConnected() == true)
+		nick(fd, input, 1);
+	else if ((input[0] == "USER" || input[0] == "USERHOST") && !getClient(fd)->getNick().empty() && getClient(fd)->isConnected() == true)
+		user(fd, input, 1);
+}
+
+static std::vector<std::string>	splitInput(std::string str)
 {
 	if (str.size() >= 2 && str.substr(str.size() - 2) == "\r\n")
 		str.erase(str.size() - 2);
@@ -90,7 +133,6 @@ static std::vector<std::string> splitInput(std::string str)
 		if (str[i] == '\n')
 			str[i] = ' ';
 	}
-
 	std::vector<std::string> result;
 	size_t start = 0;
 	while (start < str.size())
@@ -110,41 +152,29 @@ static std::vector<std::string> splitInput(std::string str)
 
 void	Server::handleCmd(const int& fd, char *buff)
 {
-    std::vector<std::string> input = splitInput(buff);
-    if (input.empty())
-        return;
-    std::string cmd = input[0];
-    std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
-	// std::cout << "LAAAAAA  " + cmd << std::endl;
-	if (cmd == "CAP")
-		return;
-	else if (cmd == "PASS")
-		pass(fd, input);
-	else if (cmd == "NICK" && getClient(fd)->isConnected() == true)
-		nick(fd, input);
-	else if ((cmd == "USER" || cmd == "USERHOST") && getClient(fd)->isConnected() == true)
-		user(fd, input);
+	std::vector<std::string> input = splitInput(buff);
+	std::string cmd = input[0];
+	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
+	if (cmd == "CAP" || cmd == "PASS" || cmd == "NICK" || cmd == "USER")
+		return (check_connexion(fd, input));
 	else if (cmd == "QUIT")
 		quit(fd);
 	else if (cmd == "JOIN")
-			join(fd, input);
-	else if (cmd == "PING")
-		pong(fd, input[1]);
-	else if (cmd == "PART")
+		join(fd, input);
+	else if (cmd == "MSG")
+		msg(fd, input);
+	if (_channels.size() == 0)
+		return ;
+	if (cmd == "PART")
 		part(fd);
 	else if (cmd == "KICK")
 		kick(fd, input);
 	else if (cmd == "INVITE")
 		invite(fd, input);
 	else if (cmd == "MODE")
-	{
-		std::cout << "tests " << input[0] << std::endl;
 		mode(fd, input);
-	}
 	else if (cmd == "TOPIC")
 		topic(fd, input);
-	else if (cmd == "MSG")
-		msg(fd, input);
 	else
 		broadcastToChannel(fd, constructMessage(fd, buff));
 }
@@ -168,35 +198,6 @@ void	Server::broadcastToChannel(const int& fd, const std::string& message)
 		channel->sendMessage(message);
 }
 
-// int Server::ParseData(int fd, char *buff)
-// {
-// 	std::vector<std::string> input = splitInput(buff);
-// 	std::cout << "buff : " << buff << std::endl;
-// 	// if (getClient(fd)->getInterface() == IRSSI && input[0][0] != '/')
-// 	// 	input[0] = "/" + input[0];
-// 	if (input[0][0] == '/')
-// 		handleCmd(fd, input);
-// 	else
-// 		broadcastToChannel(fd, constructMessage(fd, buff));
-// 	return (0);
-// }
-
-// int	detect_irssi(char *buff)
-// {
-// 	std::string str;
-// 	std::string str2;
-// 	str2 = "CAP LS";
-// 	int i = 0;
-// 	while (buff[i] != '\n')
-// 	{
-// 		str[i] = buff[i];
-// 		i++;
-// 	}
-// 	if (str.find(str2, 0))
-// 		return (1);
-// 	return (0);
-// }
-
 void Server::ReceiveDataClient(int fd)
 {
 	char buff[1024];
@@ -213,9 +214,9 @@ void Server::ReceiveDataClient(int fd)
 	else
 	{
 		buff[bytes] = '\0';
+		std::cout << "buff : " << buff << std::endl;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		handleCmd(fd, buff);
-		std::cout << "buffer: " << buff << std::endl;
 	}
 }
 

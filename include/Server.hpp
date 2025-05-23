@@ -93,12 +93,11 @@ class	Server
 		void	messageFromServer(const int& fd, const std::string& message) const { send(fd, message.c_str(), message.size(), 0); }
 		void AcceptIncomingClient();
 		void ReceiveDataClient(int fd);
-		int	ParseData(int fd, char *buff);
 		void	handleCmd(const int& fd, char *buff);
-		void	nick(const int& fd, const std::vector<std::string>& input);
-		void	user(const int& fd, const std::vector<std::string>& input);
+		void	nick(const int& fd, const std::vector<std::string>& input, int index);
+		void	user(const int& fd, const std::vector<std::string>& input, int index);
 		void	quit(const int& fd);
-		void	pass(const int& fd, const std::vector<std::string>& input);
+		void	pass(const int& fd, const std::vector<std::string>& input, int index);
 		void	join(const int& fd, const std::vector<std::string>& input);
 		void	part(const int& fd);
 		void	pong(const int fd, std::string token);
@@ -118,6 +117,7 @@ class	Server
 		int		checkChannelPassword(const int& fd, std::string channel, const std::string& input);
 		void	addOperator(char sign, const int& fd, std::vector<std::string>& input);
 		void	addUserLimit(char sign, const int& fd, std::vector<std::string>& input);
+		void	check_connexion(const int& fd, std::vector<std::string> input);
 
 		std::vector<std::string> getUserInput(const int& fd);
 
