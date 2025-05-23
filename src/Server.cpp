@@ -182,6 +182,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 		pong(fd, input[1]);
 	else
 		broadcastToChannel(input);
+	buff[strlen(buff) - 1] == '\n' && buff[strlen(buff) - 2] == '\r' ? std::cout << "OUI\n" : std::cout << "NON\n";
 }
 
 void	Server::broadcastToChannel(const std::vector<std::string>& input)

@@ -59,6 +59,9 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
+	std::string message = ":" + getClient(fd)->getNick() + " JOIN :" + channelName + "\r\n";
+	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++) 
+		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
 	if (!getChannel(channelName)->getTopic().empty())
 		reply(fd, RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
 	reply(fd, RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
@@ -120,13 +123,13 @@ void	Server::user(const int& fd, const std::vector<std::string>& input, int inde
 	}
 }
 
-bool isSpecial(char c)
+bool	isSpecial(char c)
 {
     std::string specials = "[]\\`_^{|}";
     return specials.find(c) != std::string::npos;
 }
 
-bool isValidNickname(const std::string& nickname)
+bool	isValidNickname(const std::string& nickname)
 {
     if (nickname.empty() || nickname.size() > 9)
         return false;
@@ -286,6 +289,9 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 			topic += ' ';
 	}
 	getChannel(channelName)->setTopic(topic);
+	std::string message = ":" + getClient(fd)->getNick() + " TOPIC " + channelName + " :" + topic + "\r\n";
+	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
+		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::msg(const int& fd, const std::vector<std::string>& input)

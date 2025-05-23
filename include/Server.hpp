@@ -26,6 +26,7 @@
 #define RPL_MYINFO "004"
 
 #define RPL_UMODEIS "221"
+#define RPL_ADMINME "256"
 #define RPL_CHANNELMODEIS "324"
 #define RPL_CREATIONTIME "329"
 #define RPL_NOTOPIC "331"
@@ -127,7 +128,6 @@ class	Server
 
 		void				CloseFds();
 		void				ClearClients(int fd);
-
 
 };
 
