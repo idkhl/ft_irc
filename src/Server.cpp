@@ -287,11 +287,11 @@ void Server::ClearClients(int fd)
 	clients.erase(getClient(fd));
 }
 
-void	reply(int fd, std::string code, std::string msg)
+void	reply(std::vector<Client>::iterator client, std::string code, std::string msg)
 {
 	std::string response = ":localhost " + code;
-	response += " yrio" + msg + "\r\n";
-	send(fd, response.c_str(), response.length(), 0);
+	response += ' ' + client->getNick() + msg + "\r\n";
+	send(client->getFd(), response.c_str(), response.length(), 0);
 }
 
 void	Server::deleteChannel(const std::string& channelName)

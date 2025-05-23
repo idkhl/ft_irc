@@ -9,9 +9,9 @@ void    Client::setAuthorization(const int& fd, const bool& allowed)
         std::cout << msg << std::endl;
         send(fd, msg.c_str(), msg.length(), 0);
 
-        // reply(fd, RPL_WELCOME, " :Welcome to the IRC server");
-        // reply(fd, RPL_YOURHOST, " :Your host is localhost");
-        // reply(fd, RPL_CREATED, " :This server was created today");
+        // reply(getClient(fd), RPL_WELCOME, " :Welcome to the IRC server");
+        // reply(getClient(fd), RPL_YOURHOST, " :Your host is localhost");
+        // reply(getClient(fd), RPL_CREATED, " :This server was created today");
     }
     _allowed = allowed;
 }

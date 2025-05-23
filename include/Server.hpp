@@ -112,7 +112,7 @@ class	Server
 		void				broadcastToChannel(const std::vector<std::string>& input);
 		void				mode(const int&fd, const std::vector<std::string>& input);
 		void				parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName);
-		void				checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName);
+		void				checkModes(const int& fd, std::string str, std::vector<std::string> input, const std::string& channelName);
 		void				addInvite(const int& fd, char sign, const std::string& channelName);
 		void				addTopicRestriction(const int& fd, char sign, const std::string& channelName);
 		void				addPassword(const int& fd, char sign, const std::string& channelName, std::vector<std::string>& input);
@@ -131,4 +131,4 @@ class	Server
 
 };
 
-void	reply(int fd, std::string code, std::string msg);
+void	reply(std::vector<Client>::iterator client, std::string code, std::string msg);

@@ -2,6 +2,18 @@
 #include <limits>
 #include <algorithm>
 
+static void	sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
+{
+	std::string message = ":" + sender.getNick() + " MODE " + channel.getName() + " " + mode;
+	if (target.empty())
+		std::cout << "EMPTY\n";
+	else
+		std::cout << "NON\n";
+	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
+	for (size_t i = 0 ; i < channel.getClientCount() ; i++)
+		send(channel.getClients()[i]->getFd(), message.c_str(), message.size(), 0);
+}
+
 void	Server::addInvite(const int& fd, char sign, const std::string& channelName)
 {
 	std::vector<Channel>::iterator channel = getChannel(channelName);
@@ -10,14 +22,13 @@ void	Server::addInvite(const int& fd, char sign, const std::string& channelName)
 		if (sign == '+')
 		{
 			channel->setInviteMode(true);
-			std::string message = ":" + getClient(fd)->getNick() + " MODE " + channelName + " +i\r\n";
-			for (size_t i = 0 ; i < channel->getClientCount() ; i++)
-				send(channel->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
+			sendGoodCommand(*getClient(fd), *channel, "+i", "");
 			std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
 		}
 		else
 		{
 			channel->setInviteMode(false);
+			sendGoodCommand(*getClient(fd), *channel, "-i", "");
 			std::cout << "Invite-only mode disabled for channel: " << channel->getName() << std::endl;
 		}
 	}
@@ -27,18 +38,19 @@ void	Server::addInvite(const int& fd, char sign, const std::string& channelName)
 
 void	Server::addTopicRestriction(const int& fd, char sign, const std::string& channelName)
 {
-	(void)fd;
 	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
 		if (sign == '+')
 		{
 			channel->setTopicRestriction(true);
+			sendGoodCommand(*getClient(fd), *channel, "+t", "");
 			std::cout << "Topic change restriction enabled for channel: " << channel->getName() << std::endl;
 		}
 		else
 		{
 			channel->setTopicRestriction(false);
+			sendGoodCommand(*getClient(fd), *channel, "-t", "");
 			std::cout << "Topic change restriction disabled for channel: " << channel->getName() << std::endl;
 		}
 	}
@@ -104,17 +116,20 @@ void	Server::addOperator(char sign, const std::string& channelName, const int& f
 	if (clientIt == clients.end())
 		return;
 	std::vector<Channel>::iterator channel = getChannel(channelName);
+	std::vector<Client>::iterator target = getClient(input[3]);
 	if (channel == _channels.end())
 		return;
 	if (sign == '+')
 	{
-		getChannel(channelName)->addAdmin(fd);
-		std::cout << input[0] << " is now an operator" << std::endl;
+		getChannel(channelName)->addAdmin(target->getFd());
+		sendGoodCommand(*getClient(fd), *channel, "+o", target->getNick());
+		std::cout << input[2] << " is now an operator" << std::endl;
 	}
 	else
 	{
 		getChannel(channelName)->deleteAdmin(fd);
-		std::cout << input[0] << " is not an operator anymore" << std::endl;
+		sendGoodCommand(*getClient(fd), *channel, "-o", target->getNick());
+		std::cout << input[2] << " is not an operator anymore" << std::endl;
 	}
 }
 
@@ -140,7 +155,7 @@ void	Server::addUserLimit(const int& fd, char sign, const std::string& channelNa
 	}
 }
 
-void	Server::checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName)
+void	Server::checkModes(const int& fd, std::string str, std::vector<std::string> input, const std::string& channelName)
 {
 	std::vector<std::string> modifiedInput;	
 	for (size_t i = 2; i < input.size(); i++)
@@ -171,11 +186,11 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
                 				modifiedInput.erase(modifiedInput.begin());
                 		}
 				if (str[i] == 'o')
-                {
-			addOperator(sign, channelName, fd, modifiedInput);
-        		if (!modifiedInput.empty())
-        			modifiedInput.erase(modifiedInput.begin());
-                }
+                		{
+					addOperator(sign, channelName, fd, input);
+        				// if (!modifiedInput.empty())
+        				// 	modifiedInput.erase(modifiedInput.begin());
+                		}
 				if (str[i] == 'l')
                 		{
                 			addUserLimit(fd, sign, channelName, modifiedInput);
