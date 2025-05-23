@@ -1,7 +1,7 @@
 #include "../include/Client.hpp"
 #include "../include/Server.hpp"
 
-void Client::setAuthorization(int fd, const bool& allowed)
+void    Client::setAuthorization(const int& fd, const bool& allowed)
 {
     if (_allowed == false)
     {

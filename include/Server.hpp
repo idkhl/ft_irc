@@ -26,6 +26,7 @@
 #define RPL_MYINFO "004"
 
 #define RPL_UMODEIS "221"
+#define RPL_ADMINME "256"
 #define RPL_CHANNELMODEIS "324"
 #define RPL_CREATIONTIME "329"
 #define RPL_NOTOPIC "331"
@@ -72,60 +73,61 @@ class Channel;
 class	Server
 {
 	private:
-		int Port;
-		int ServSocket;
-		static bool Signal;
-		char *Mdp;
-		std::vector<Client> clients;
-		std::vector<struct pollfd> fds;
-		std::vector<Channel>	_channels;
+		int 				Port;
+		int 				ServSocket;
+		static bool			Signal;
+		char 				*Mdp;
+		std::vector<Client> 		clients;
+		std::vector<struct pollfd> 	fds;
+		std::vector<Channel>		_channels;
 
 	public:
-		Server() { ServSocket = -1; }
-		~Server(void) { CloseFds(); }
+						Server() { ServSocket = -1; }
+						~Server(void) { CloseFds(); }
 
 		std::vector<Client>::iterator	getClient(const int& fd) { return std::find(clients.begin(), clients.end(), fd); }
-		std::vector<Client>::iterator	getClient(const std::string& userName) { return std::find(clients.begin(), clients.end(), userName); }
+		std::vector<Client>::iterator	getClient(const std::string& nickname) { return std::find(clients.begin(), clients.end(), nickname); }
 		std::vector<Channel>::iterator	getChannel(const std::string& channel) { return std::find(_channels.begin(), _channels.end(), channel); }
+		std::vector<std::string>	getUserInput(const int& fd);
+		size_t				getNbrChannel(void) const { return _channels.size(); }
 
-		void ServerInit(int port, char *mdp);
-		void SerSocket();
-		void	messageFromServer(const int& fd, const std::string& message) const { send(fd, message.c_str(), message.size(), 0); }
-		void AcceptIncomingClient();
-		void ReceiveDataClient(int fd);
-		void	handleCmd(const int& fd, char *buff);
-		void	nick(const int& fd, const std::vector<std::string>& input, int index);
-		void	user(const int& fd, const std::vector<std::string>& input, int index);
-		void	quit(const int& fd);
-		void	pass(const int& fd, const std::vector<std::string>& input, int index);
-		void	join(const int& fd, const std::vector<std::string>& input);
-		void	part(const int& fd);
-		void	pong(const int fd, std::string token);
-		void	kick(const int& fd, const std::vector<std::string>& usersToKick);
-		void	invite(const int& fd, const std::vector<std::string>& usersToInvite);
-		void	topic(const int& fd, const std::vector<std::string>& input);
-		void	msg(const int& fd, const std::vector<std::string>& input);
-		std::string	constructMessage(const int& fd, const char *buff);
-		void broadcastToChannel(const int& fd, const std::string& message);
+		void				ServerInit(int port, char *mdp);
+		void				SerSocket();
+		void				messageFromServer(const int& fd, const std::string& message) const { send(fd, message.c_str(), message.size(), 0); }
+		void				AcceptIncomingClient();
+		void				ReceiveDataClient(int fd);
+		int				ParseData(int fd, char *buff);
+		void				handleCmd(const int& fd, char *buff);
+		void				nick(const int& fd, const std::vector<std::string>& input, int index);
+		void				user(const int& fd, const std::vector<std::string>& input, int index);
+		void				quit(const int& fd);
+		void				pass(const int& fd, const std::vector<std::string>& input, int index);
+		void				join(const int& fd, const std::vector<std::string>& input);
+		void				part(const int& fd);
+		void				pong(const int fd, std::string token);
+		void				kick(const int& fd, const std::vector<std::string>& usersToKick);
+		void				invite(const int& fd, const std::vector<std::string>& usersToInvite);
+		void				topic(const int& fd, const std::vector<std::string>& input);
+		void				msg(const int& fd, const std::vector<std::string>& input);
+		void				broadcastToChannel(const std::vector<std::string>& input);
+		void				mode(const int&fd, const std::vector<std::string>& input);
+		void				parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName);
+		void				checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName);
+		void				addInvite(char sign, const std::string& channelName);
+		void				addTopicRestriction(char sign, const std::string& channelName);
+		void				addPassword(char sign, const std::string& channelName, std::vector<std::string>& input);
+		int				checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
+		void				addOperator(char sign, const std::string& channelName, const int& fd, std::vector<std::string>& input);
+		void				addUserLimit(char sign, const std::string& channelName, std::vector<std::string>& input);
+		void				check_connexion(const int& fd, std::vector<std::string> input);
 
-		void	mode(const int&fd, const std::vector<std::string>& input);
-		void	parseModes(const int& fd, const std::vector<std::string>& input);
-		void	checkModes(const int& fd, std::string str, const std::vector<std::string> input);
-		void	addInvite(char sign, const int& fd);
-		void	addTopicRestriction(char sign, const int& fd);
-		void	addPassword(char sign, const int& fd, std::vector<std::string>& input);
-		int		checkChannelPassword(const int& fd, std::string channel, const std::string& input);
-		void	addOperator(char sign, const int& fd, std::vector<std::string>& input);
-		void	addUserLimit(char sign, const int& fd, std::vector<std::string>& input);
-		void	check_connexion(const int& fd, std::vector<std::string> input);
+		void				deleteChannel(const std::string& channelName);
+		void				deleteChannel(std::vector<Channel>::iterator channel) { _channels.erase(channel); }
 
-		std::vector<std::string> getUserInput(const int& fd);
+		static void			SignalHandler(int signum);
 
-		static void SignalHandler(int signum);
-
-		void CloseFds();
-		void ClearClients(int fd);
-
+		void				CloseFds();
+		void				ClearClients(int fd);
 
 };
 

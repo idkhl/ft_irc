@@ -1,8 +1,17 @@
 #include "../include/Channel.hpp"
+#include "../include/Client.hpp"
 
 Channel::Channel(Client& client, const std::string& name) : _name(name)
 {
-	client.setAdmin(true);
+	_adminFds.push_back(client.getFd());
+	_clients.push_back(&client);
+	_topicRestriction = false;
+	_inviteMode = false;
+	_clientLimit = -1;
+}
+
+Channel::Channel(Client& client, const std::string& name, const std::string& topic) :_name(name), _topic(topic)
+{
 	_adminFds.push_back(client.getFd());
 	_clients.push_back(&client);
 	_topicRestriction = false;
@@ -16,29 +25,15 @@ void	Channel::sendMessage(const std::string& message) const
 		send(_clients[i]->getFd(), message.c_str(), strlen(message.c_str()), 0);
 }
 
-void	Channel::join(Client& client)
-{
-	if (std::find(_adminFds.begin(), _adminFds.end(), client.getFd()) != _adminFds.end())
-		client.setAdmin(true);
-	else
-		client.setAdmin(false);
-	_clients.push_back(&client);
-}
-
 void	Channel::deleteClient(const int& fd)
 {
-	Client *client = getClient(fd);
-	if (client != NULL)
+	for (size_t i = 0 ; i < _clients.size() ; i++)
 	{
-		client->getChannel().clear();
-		client->setAdmin(false);
-		size_t i;
-		for (i = 0 ; i < _clients.size() ; i++)
+		if (_clients[i]->getFd() == fd)
 		{
-			if (_clients[i]->getFd() == fd)
-				break;
+			_clients.erase(_clients.begin() + i);
+			return;
 		}
-		_clients.erase(_clients.begin() + i);
 	}
 }
 
@@ -50,4 +45,41 @@ Client	*Channel::getClient(const int& fd)
 			return _clients[i];
 	}
 	return NULL;
+}
+
+Client	*Channel::getClient(const std::string& userName)
+{
+	for (size_t i = 0 ; i < _clients.size() ; i++)
+	{
+		if (_clients[i]->getUser() == userName)
+			return _clients[i];
+	}
+	return NULL;
+}
+
+Client	*Channel::getAdmin(const int& fd)
+{
+	std::vector<int>::const_iterator clientFd = std::find(_adminFds.begin(), _adminFds.end(), fd);
+	return clientFd != _adminFds.end() ? getClient(*clientFd) : NULL;
+}
+
+Client	*Channel::getAdmin(const std::string& userName)
+{
+	Client *client = getClient(userName);
+	if (client == NULL)
+		return NULL;
+	return getAdmin(client->getFd());
+}
+
+void	Channel::addClient(Client& client)
+{
+	if (getClient(client.getFd()) == NULL && getClientCount() < _clientLimit)
+		_clients.push_back(&client);
+}
+
+void	Channel::deleteAdmin(const int& fd)
+{
+	std::vector<int>::iterator admin = std::find(_adminFds.begin(), _adminFds.end(), fd);
+	if (admin != _adminFds.end())
+		_adminFds.erase(admin);
 }
