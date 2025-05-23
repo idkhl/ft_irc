@@ -56,6 +56,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 			}
 		}
 		getChannel(channelName)->addClient(*getClient(fd));
+		getClient(fd)->addChannel(channelName);
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
@@ -209,19 +210,33 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, "You do not have the right to kick someone\n");
 		return;
 	}
-	for (size_t i = 2 ; i < input.size() ; i++)
+	std::string target = input[2];
+	if (getClient(target) == clients.end() || !getClient(target)->isInChannel(channelName))
 	{
-		if (getClient(input[i]) == clients.end() || !getClient(input[i])->isInChannel(channelName))
-			messageFromServer(fd, "There is no user named " + input[i] + " in the channel + " + channelName + '\n');
-		else
+		std::cout << "debile\n";
+		for (size_t i = 0 ; i < getChannel(channelName)->getClients().size() ; i++)
+			std::cout << getChannel(channelName)->getClients()[i]->getNick() << std::endl;
+		reply(fd, ERR_ERRONEUSNICKNAME, target + " :Erroneous nickname");
+	}
+	else
+	{
+		getClient(target)->deleteChannel(channelName);
+		getChannel(channelName)->deleteClient(getClient(target)->getFd());
+		getChannel(channelName)->deleteAdmin(getClient(target)->getFd());
+		if (getChannel(channelName)->getClientCount() == 0)
+			deleteChannel(channelName);
+		std::string message = ":" + getClient(fd)->getNick() + " KICK " + channelName + " " + target;
+		if (input.size() > 4)
 		{
-			getClient(input[i])->deleteChannel(channelName);
-			getChannel(channelName)->deleteClient(getClient(input[i])->getFd());
-			getChannel(channelName)->deleteAdmin(getClient(input[i])->getFd());
-			if (getChannel(channelName)->getClientCount() == 0)
-				deleteChannel(channelName);
-			messageFromServer(fd, "You kicked " + input[i] + " form the channel " + channelName + "\n");
+			std::string reason;
+			for (size_t i = 3 ; i < input.size() ; i++)
+				reason += i == input.size() - 1 ? input[i] : input[i] + ' ';
+			message += " :" + reason;
 		}
+		message += "\r\n";
+		std::cout << message << std::endl;
+		for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
+			send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
 	}
 }
 

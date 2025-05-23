@@ -182,7 +182,6 @@ void	Server::handleCmd(const int& fd, char *buff)
 		pong(fd, input[1]);
 	else
 		broadcastToChannel(input);
-	buff[strlen(buff) - 1] == '\n' && buff[strlen(buff) - 2] == '\r' ? std::cout << "OUI\n" : std::cout << "NON\n";
 }
 
 void	Server::broadcastToChannel(const std::vector<std::string>& input)
@@ -203,7 +202,7 @@ void Server::ReceiveDataClient(int fd)
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
 
-	std::cout << "buffer: " << buff;
+	std::cout << "buffer = " << buff << std::endl;
 
 	if (bytes <= 0)
 	{
@@ -214,7 +213,6 @@ void Server::ReceiveDataClient(int fd)
 	else
 	{
 		buff[bytes] = '\0';
-		std::cout << "buff : " << buff << std::endl;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
 		handleCmd(fd, buff);
 	}
