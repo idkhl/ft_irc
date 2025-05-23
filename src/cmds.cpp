@@ -249,22 +249,24 @@ void	Server::invite(const int& fd, const std::vector<std::string>& input)
 	}
 	if (input.size() < 3)
 		return;
-	std::string channelName = input[1];
-	if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)
-	{
-		messageFromServer(fd, "You do not have the right to invite someone\n");
+	std::string channelName = input[2];
+	std::string target = input[1];
+	// if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)
+	// {
+	// 	messageFromServer(fd, "You do not have the right to invite someone\n");
+	// 	return;
+	// }
+	if (getChannel(channelName) == _channels.end())
 		return;
-	}
-	for (size_t i = 2 ; i < input.size() ; i++)
+	if (getClient(target) == clients.end())
+		messageFromServer(fd, "There is no user named " + target + "\n");
+	else
 	{
-		if (getClient(input[i]) == clients.end())
-			messageFromServer(fd, "There is no user named " + input[i] + "\n");
-		else
-		{
-			getClient(input[i])->addInvitation(channelName);
-			messageFromServer(fd, "You invited " + input[i] + " to the channel " + channelName + "\n");
-			reply(fd, RPL_INVITING, channelName + " " + input[i]);
-		}
+		// getClient(channelName)->addInvitation(channelName);
+		messageFromServer(fd, "You invited " + target + " to the channel " + channelName + "\n");
+		reply(fd, RPL_INVITING, channelName + " " + target);
+		std::string message = ":" + getClient(fd)->getNick() + " INVITE " + target + " " + channelName + "\r\n";
+		send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
 	}
 }
 

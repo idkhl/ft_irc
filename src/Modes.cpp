@@ -2,7 +2,7 @@
 #include <limits>
 #include <algorithm>
 
-void	Server::addInvite(char sign, const std::string& channelName)
+void	Server::addInvite(const int& fd, char sign, const std::string& channelName)
 {
 	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
@@ -10,6 +10,9 @@ void	Server::addInvite(char sign, const std::string& channelName)
 		if (sign == '+')
 		{
 			channel->setInviteMode(true);
+			std::string message = ":" + getClient(fd)->getNick() + " MODE " + channelName + " +i\r\n";
+			for (size_t i = 0 ; i < channel->getClientCount() ; i++)
+				send(channel->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
 			std::cout << "Invite-only mode enabled for channel: " << channel->getName() << std::endl;
 		}
 		else
@@ -22,8 +25,9 @@ void	Server::addInvite(char sign, const std::string& channelName)
 		std::cout << "Channel not found for client." << std::endl;
 }
 
-void	Server::addTopicRestriction(char sign, const std::string& channelName)
+void	Server::addTopicRestriction(const int& fd, char sign, const std::string& channelName)
 {
+	(void)fd;
 	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
@@ -66,8 +70,9 @@ int	Server::checkChannelPassword(const int& fd, std::string channel, const std::
 	return 0;
 }
 
-void	Server::addPassword(char sign, const std::string& channelName, std::vector<std::string>& input)
+void	Server::addPassword(const int& fd, char sign, const std::string& channelName, std::vector<std::string>& input)
 {
+	(void)fd;
 	std::vector<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
@@ -113,8 +118,9 @@ void	Server::addOperator(char sign, const std::string& channelName, const int& f
 	}
 }
 
-void	Server::addUserLimit(char sign, const std::string& channelName, std::vector<std::string>& input)
+void	Server::addUserLimit(const int& fd, char sign, const std::string& channelName, std::vector<std::string>& input)
 {
+	(void)fd;
 	if (sign == '+')
 	{
 		size_t limit;
@@ -155,12 +161,12 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
 			while (i < str.length() && str[i] != '+' && str[i] != '-')
 			{
 				if (str[i] == 'i')
-					addInvite(sign, channelName);
+					addInvite(fd, sign, channelName);
 				if (str[i] == 't')
-					addTopicRestriction(sign, channelName);
+					addTopicRestriction(fd, sign, channelName);
 				if (str[i] == 'k')
                 		{
-                			addPassword(sign, channelName, modifiedInput);
+                			addPassword(fd, sign, channelName, modifiedInput);
                 			if (!modifiedInput.empty())
                 				modifiedInput.erase(modifiedInput.begin());
                 		}
@@ -172,7 +178,7 @@ void	Server::checkModes(const int& fd, std::string str, const std::vector<std::s
                 }
 				if (str[i] == 'l')
                 		{
-                			addUserLimit(sign, channelName, modifiedInput);
+                			addUserLimit(fd, sign, channelName, modifiedInput);
                 			if (!modifiedInput.empty())
                 				modifiedInput.erase(modifiedInput.begin());
                 		}

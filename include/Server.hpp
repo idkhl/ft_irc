@@ -113,12 +113,12 @@ class	Server
 		void				mode(const int&fd, const std::vector<std::string>& input);
 		void				parseModes(const int& fd, const std::vector<std::string>& input, const std::string& channelName);
 		void				checkModes(const int& fd, std::string str, const std::vector<std::string> input, const std::string& channelName);
-		void				addInvite(char sign, const std::string& channelName);
-		void				addTopicRestriction(char sign, const std::string& channelName);
-		void				addPassword(char sign, const std::string& channelName, std::vector<std::string>& input);
+		void				addInvite(const int& fd, char sign, const std::string& channelName);
+		void				addTopicRestriction(const int& fd, char sign, const std::string& channelName);
+		void				addPassword(const int& fd, char sign, const std::string& channelName, std::vector<std::string>& input);
 		int				checkChannelPassword(const int& fd, std::string channel, const std::vector<std::string>& input);
 		void				addOperator(char sign, const std::string& channelName, const int& fd, std::vector<std::string>& input);
-		void				addUserLimit(char sign, const std::string& channelName, std::vector<std::string>& input);
+		void				addUserLimit(const int& fd, char sign, const std::string& channelName, std::vector<std::string>& input);
 		void				check_connexion(const int& fd, std::vector<std::string> input);
 
 		void				deleteChannel(const std::string& channelName);
