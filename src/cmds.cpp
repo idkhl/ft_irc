@@ -46,7 +46,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++) 
 		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
 	if (!getChannel(channelName)->getTopic().empty())
-		reply(getClient(fd), RPL_TOPIC, channelName + " :" + getChannel(channelName)->getTopic());
+		reply(getClient(fd), RPL_TOPIC, getClient(fd)->getNick() + " " + channelName + " :" + getChannel(channelName)->getTopic());
 	reply(getClient(fd), RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
 }
 
@@ -224,26 +224,22 @@ void	Server::invite(const int& fd, const std::vector<std::string>& input)
 		return;
 	}
 	if (input.size() < 3)
-		return;
+		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	std::string channelName = input[2];
 	std::string target = input[1];
-	// if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)
-	// {
-	// 	messageFromServer(fd, "You do not have the right to invite someone\n");
-	// 	return;
-	// }
+	if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)
+		return (reply(getClient(fd), ERR_CHANOPRIVSNEEDED, channelName + " :You're not channel operator"));
 	if (getChannel(channelName) == _channels.end())
-		return;
+		return (reply(getClient(fd), ERR_NOSUCHCHANNEL, channelName + " :No such channel"));
 	if (getClient(target) == clients.end())
-		messageFromServer(fd, "There is no user named " + target + "\n");
-	else
-	{
-		// getClient(channelName)->addInvitation(channelName);
-		messageFromServer(fd, "You invited " + target + " to the channel " + channelName + "\n");
-		reply(getClient(fd), RPL_INVITING, channelName + " " + target);
-		std::string message = ":" + getClient(fd)->getNick() + " INVITE " + target + " " + channelName + "\r\n";
-		send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
-	}
+		return (reply(getClient(fd), ERR_NOSUCHNICK, target + " :No such nick/channel"));
+//	ERR_USERONCHANNEL "<user> <channel> :is already on channel"
+//	ERR_NOTONCHANNEL "<channel> :You're not on that channel"
+
+	getClient(target)->addInvitation(channelName);
+	reply(getClient(fd), RPL_INVITING, getClient(fd)->getNick() + " " + target + " " + channelName);
+	std::string message = " INVITE " + target + " :" + channelName;
+	sendToIrssi(getClient(target), message);
 }
 
 void	Server::topic(const int& fd, const std::vector<std::string>& input)
