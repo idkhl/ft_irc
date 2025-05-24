@@ -233,8 +233,10 @@ void	Server::invite(const int& fd, const std::vector<std::string>& input)
 		return (reply(getClient(fd), ERR_NOSUCHCHANNEL, channelName + " :No such channel"));
 	if (getClient(target) == clients.end())
 		return (reply(getClient(fd), ERR_NOSUCHNICK, target + " :No such nick/channel"));
-//	ERR_USERONCHANNEL "<user> <channel> :is already on channel"
-//	ERR_NOTONCHANNEL "<channel> :You're not on that channel"
+	if (getClient(target)->isInChannel(channelName))
+		return reply(getClient(fd), ERR_USERONCHANNEL, target + " " + channelName + " :is already on channel");
+	if (!getClient(fd)->isInChannel(channelName))
+		return reply(getClient(fd), ERR_NOTONCHANNEL, channelName + " :You're not on that channel");
 
 	getClient(target)->addInvitation(channelName);
 	reply(getClient(fd), RPL_INVITING, getClient(fd)->getNick() + " " + target + " " + channelName);
@@ -250,13 +252,10 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 		return;
 	}
 	if (input.size() < 2)
-		return;
+		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	std::string channelName = input[1];
 	if (getChannel(channelName) == _channels.end())
-	{
-		messageFromServer(fd, "There is no channel named " + channelName + '\n');
-		return;
-	}
+		return (reply(getClient(fd), ERR_NOSUCHCHANNEL, channelName + " :No such channel"));
 	if (input.size() == 2)
 	{
 		if (getChannel(channelName)->getTopic().empty())
@@ -266,10 +265,9 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 		return;
 	}
 	if (!getClient(fd)->isAdmin(*getChannel(channelName)) && getChannel(channelName)->isTopicRestriction())
-	{
-		messageFromServer(fd, "You have to be an operator to change the topic\n");
-		return;
-	}
+		return (reply(getClient(fd), ERR_CHANOPRIVSNEEDED, channelName + " :You're not channel operator"));
+	if (!getClient(fd)->isInChannel(channelName))
+		return reply(getClient(fd), ERR_NOTONCHANNEL, channelName + " :You're not on that channel");
 	std::string topic;
 	for (size_t i = 2 ; i < input.size() ; i++)
 	{
@@ -278,7 +276,7 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 			topic += ' ';
 	}
 	getChannel(channelName)->setTopic(topic);
-	std::string message = ":" + getClient(fd)->getNick() + " TOPIC " + channelName + " :" + topic + "\r\n";
+	std::string message = ":" + getClient(fd)->getNick() + " TOPIC " + channelName + " " + topic + "\r\n";
 	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
 		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
 }
@@ -312,7 +310,7 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 		{
 			if (members[i]->getFd() != fd)
 			{
-				std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
+				std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
 				send(members[i]->getFd(), channelMsg.c_str(), channelMsg.size(), 0);
 			}
 		}
