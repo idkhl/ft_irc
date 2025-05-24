@@ -155,9 +155,10 @@ void	Server::handleCmd(const int& fd, char *buff)
 {
 	std::vector<std::string> input = splitInput(buff);
 	if (input.empty())
-        return;
+	return;
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
+	std::cout << "[" << cmd << "]" << std::endl;
 	if (cmd == "CAP" || cmd == "PASS" || cmd == "NICK" || cmd == "USER")
 		return (check_connexion(fd, input));
 	else if (cmd == "QUIT")
@@ -168,8 +169,6 @@ void	Server::handleCmd(const int& fd, char *buff)
 		return ;
 	if (cmd == "PRIVMSG")
 		msg(fd, input);
-	else if (cmd == "PING")
-		pong(fd, input[1]);
 	else if (cmd == "KICK")
 		kick(fd, input);
 	else if (cmd == "INVITE")
@@ -179,7 +178,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 	else if (cmd == "TOPIC")
 		topic(fd, input);
 	else if (cmd == "PING")
-		pong(fd, input[1]);
+		pong(fd, input.size() > 1 ? input[1] : "localhost");
 	else
 		broadcastToChannel(input);
 }
@@ -290,9 +289,24 @@ void Server::ClearClients(int fd)
 void	reply(std::vector<Client>::iterator client, std::string code, std::string msg)
 {
 	std::string response = ":localhost " + code;
-	response += ' ' + client->getNick() + msg + "\r\n";
+	response += ' ' + msg + "\r\n";
 	send(client->getFd(), response.c_str(), response.length(), 0);
 }
+
+void	sendToIrssi(std::vector<Client>::iterator client, std::string message)
+{
+	std::string msg = ":localhost " + message + "\r\n";
+	std::cout << "SNDTOIRSSI [" << msg << "]" << std::endl;
+	send(client->getFd(), msg.c_str(), msg.length(), 0);
+}
+
+// void	reply(int fd, std::string code, std::string msg)
+// {
+// 	std::string response = ":localhost " + code;
+// 	response += " " + msg + "\r\n";
+// 	std::cout << "REPLY [" << response << "]" << std::endl;
+// 	send(fd, response.c_str(), response.length(), 0);
+// }
 
 void	Server::deleteChannel(const std::string& channelName)
 {

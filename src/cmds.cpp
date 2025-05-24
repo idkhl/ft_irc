@@ -12,20 +12,11 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	if (input.size() == 1)
 		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, input[0] + " :Not enough parameters"));
 	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
-	std::string topic;
-	if (input.size() > 2)
-	{
-		for (size_t i = 2 ; i < input.size() ; i++)
-		{
-			topic += input[i];
-			if (i != input.size() - 1)
-				topic += ' ';
-		}
-	}
+
 	if (getChannel(channelName) == _channels.end())
 	{
 		getClient(fd)->addChannel(channelName);
-		_channels.push_back(input.size() > 2 ? Channel(*getClient(fd), channelName, topic) : Channel(*getClient(fd), channelName));
+		_channels.push_back(input.size() > 2 ? Channel(*getClient(fd), channelName) : Channel(*getClient(fd), channelName));
 		std::cout << "Channel " << channelName << " created!" << std::endl;
 		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
 	}
@@ -102,7 +93,6 @@ void	Server::pass(const int& fd, const std::vector<std::string>& input, int inde
 
 void	Server::user(const int& fd, const std::vector<std::string>& input, int index)
 {
-	std::cout << "USER()" << std::endl;
 	if (input.size() == 1)
 		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	std::vector<Client>::iterator client = getClient(fd);
@@ -116,11 +106,10 @@ void	Server::user(const int& fd, const std::vector<std::string>& input, int inde
 		if (client->isAllowed())
 			return (reply(getClient(fd), ERR_ALREADYREGISTERED, ":Unauthorized command (already registered)"));
 		client->setUser(input[index]);
-		std::string msg = ":yrio!~yrio@localhost USER :" + client->getUser() + "\r\n";
 		std::cout << "User name set to " << input[index] << std::endl;
-		// messageFromServer(fd, std::string("User name set to " + input[1] + '\n'));
 		if (getClient(fd)->isConnected() == true && !getClient(fd)->getNick().empty() && !getClient(fd)->getUser().empty())
 			getClient(fd)->setAuthorization(fd, true);
+		// sendToIrssi(client, ":" + client->getNick() + " USER :" + client->getUser());
 	}
 }
 
@@ -149,9 +138,11 @@ bool	isValidNickname(const std::string& nickname)
 
 void	Server::nick(const int& fd, const std::vector<std::string>& input, int index)
 {
+	if (input.size() == 1)
+		return (reply(getClient(fd), ERR_NONICKNAMEGIVEN, ":No nickname given"));
 	std::vector<Client>::iterator client = getClient(fd);
 	if (client == clients.end())
-		return (reply(getClient(fd), ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));
+		return;
 	if (client->isConnected() == false)
 	{
 		messageFromServer(fd, "You have to enter the password first (/PASS <password>)\n");
@@ -163,31 +154,28 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 	// 	return;
 	// }
 	if (getClient(input[1]) != clients.end())
-	{
-		messageFromServer(fd, "This nickname is already used\n");
-		return;
-	}
-	if (input.size() == 1)
-		return (reply(getClient(fd), ERR_NONICKNAMEGIVEN, ":No nickname given"));
+		return(reply(getClient(fd), ERR_NICKNAMEINUSE, input[1] + " :Nickname is already in use"));
 	size_t pos = input[index].find('\r', 0);
 	std::string sub_nick = input[index].substr(0, pos);
 	if (isValidNickname(sub_nick))
 	{
 		std::string oldNick = client->getNick();
-		// std::cout << "OLDNICK: " << client->getNick() << std::endl;
+		std::cout << "OLDNICK: " << client->getNick() << std::endl;
 		client->setNick(sub_nick);
-		std::string msg = ":" + oldNick + "!~yrio@localhost NICK " + client->getNick() + "\r\n";
+		std::string msg = ":" + oldNick + "!" + client->getUser() + "@localhost NICK " + client->getNick() + "\r\n";
 		send(fd, msg.c_str(), msg.length(), 0);
 		std::cout << "Nick name set to " << sub_nick << std::endl;
 	}
-	// ERR_NICKNAMEINUSE              
+	else
+		return (reply(getClient(fd), ERR_ERRONEUSNICKNAME, input[1] + " :Erroneous nickname"));
 	// ERR_UNAVAILRESOURCE
 }
 
-void	Server::pong(const int fd, std::string token)
+void	Server::pong(const int& fd, std::string token)
 {
-	const std::string message = "PONG " + token + "\r\n";
-	send(fd, &message, message.size(), 0);
+	std::string message = "PONG " + token + "\r\n";
+	std::cout << message << std::endl;
+	send(fd, message.c_str(), message.size(), 0);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& input)
@@ -198,25 +186,21 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		return;
 	}
 	if (input.size() < 3)
-		return;
+		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	std::string channelName = input[1];
 	if (getChannel(channelName) == _channels.end())
-	{
-		messageFromServer(fd, "There is no channel named " + channelName + '\n');
-		return;
-	}
- 	if (!getClient(fd)->isAdmin(*getChannel(channelName)))
-	{
-		messageFromServer(fd, "You do not have the right to kick someone\n");
-		return;
-	}
+		return (reply(getClient(fd), ERR_NOSUCHCHANNEL, channelName + " :No such channel"));
+	if (!getClient(fd)->isInChannel(channelName))
+		return (reply(getClient(fd), ERR_NOTONCHANNEL, channelName + " :You're not on that channel"));
+	if (!getClient(fd)->isAdmin(*getChannel(channelName)))
+		return (reply(getClient(fd), ERR_CHANOPRIVSNEEDED, channelName + " :You're not channel operator"));
+		
 	std::string target = input[2];
 	if (getClient(target) == clients.end() || !getClient(target)->isInChannel(channelName))
 	{
-		std::cout << "debile\n";
 		for (size_t i = 0 ; i < getChannel(channelName)->getClients().size() ; i++)
 			std::cout << getChannel(channelName)->getClients()[i]->getNick() << std::endl;
-		reply(getClient(fd), ERR_ERRONEUSNICKNAME, target + " :Erroneous nickname");
+		reply(getClient(fd), ERR_USERNOTINCHANNEL, input[2] + " " + channelName + " :They aren't on that channel");
 	}
 	else
 	{
@@ -237,6 +221,7 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		std::cout << message << std::endl;
 		for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
 			send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
+		send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
 	}
 }
 

@@ -163,10 +163,7 @@ void	Server::checkModes(const int& fd, std::string str, std::vector<std::string>
 		if (input[i][0] != '+' && input[i][0] != '-')
 			modifiedInput.push_back(input[i]);
 	}	
-	std::cout << "Modified Input: ";
-	for (std::vector<std::string>::iterator it = modifiedInput.begin(); it != modifiedInput.end(); ++it)
-		std::cout << *it << " ";
-	std::cout << std::endl;
+
 	for (size_t i = 0; i < str.length(); i++)
 	{
 		if (str[i] == '+' || str[i] == '-')
