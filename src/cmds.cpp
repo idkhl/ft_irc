@@ -23,26 +23,17 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	else
 	{
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
-		{
-			reply(getClient(fd), ERR_INVITEONLYCHAN, channelName + " :Cannot join channel (+i)");
-			return;
-		}
+			return (reply(getClient(fd), ERR_INVITEONLYCHAN, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+i)"));
 		if (getChannel(channelName)->getClientLimit() > 0 && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
-		{
-			reply(getClient(fd), ERR_CHANNELISFULL, channelName + " :Cannot join channel (+l)");
-			return;
-		}
+			return reply(getClient(fd), ERR_CHANNELISFULL, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+l)");
 		if (getChannel(channelName)->getPassword().empty() == false)
 		{
 			if (input.size() != 3)
-			{
-				reply(getClient(fd), ERR_BADCHANNELKEY, channelName + " :Cannot join channel (+k)");
-				return;
-			}
+				return reply(getClient(fd), ERR_BADCHANNELKEY, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+k)");
 			if (strcmp(input[2].c_str(), (getChannel(channelName)->getPassword()).c_str()) != 0)
 			{
 				std::cout << "Wrong password" << std::endl;
-				reply(getClient(fd), ERR_BADCHANNELKEY, channelName + " :Cannot join channel (+k)");
+				reply(getClient(fd), ERR_BADCHANNELKEY, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+k)");
 				return;
 			}
 		}
@@ -194,7 +185,7 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		return (reply(getClient(fd), ERR_NOTONCHANNEL, channelName + " :You're not on that channel"));
 	if (!getClient(fd)->isAdmin(*getChannel(channelName)))
 		return (reply(getClient(fd), ERR_CHANOPRIVSNEEDED, channelName + " :You're not channel operator"));
-		
+
 	std::string target = input[2];
 	if (getClient(target) == clients.end() || !getClient(target)->isInChannel(channelName))
 	{

@@ -165,7 +165,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 		quit(fd);
 	else if (cmd == "JOIN")
 		join(fd, input);
-	if (_channels.size() == 0)
+	if (getClient(fd)->getChannels().size() == 0)
 		return ;
 	if (cmd == "PRIVMSG")
 		msg(fd, input);
