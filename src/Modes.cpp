@@ -113,13 +113,13 @@ void	Server::addOperator(char sign, const std::string& channelName, const int& f
 	{
 		getChannel(channelName)->addAdmin(target->getFd());
 		sendGoodCommand(*getClient(fd), *channel, "+o", target->getNick());
-		std::cout << input[2] << " is now an operator" << std::endl;
+		std::cout << input[0] << " is now an operator" << std::endl;
 	}
 	else
 	{
 		getChannel(channelName)->deleteAdmin(fd);
 		sendGoodCommand(*getClient(fd), *channel, "-o", target->getNick());
-		std::cout << input[2] << " is not an operator anymore" << std::endl;
+		std::cout << input[0] << " is not an operator anymore" << std::endl;
 	}
 	reply(getClient(fd), RPL_CHANNELMODEIS, channelName + " " + sign + "o " + input[0]);
 }
@@ -171,21 +171,21 @@ void	Server::checkModes(const int& fd, std::string str, std::vector<std::string>
 			{
 				if (str[i] == 'i')
 					addInvite(fd, sign, channelName);
-				if (str[i] == 't')
+				else if (str[i] == 't')
 					addTopicRestriction(fd, sign, channelName);
-				if (str[i] == 'k')
+				else if (str[i] == 'k')
 				{
 					addPassword(fd, sign, channelName, modifiedInput);
 					if (!modifiedInput.empty())
 						modifiedInput.erase(modifiedInput.begin());
 				}
-				if (str[i] == 'o')
+				else if (str[i] == 'o')
 				{
 					addOperator(sign, channelName, fd, modifiedInput);
 					if (!modifiedInput.empty())
 						modifiedInput.erase(modifiedInput.begin());
 				}
-				if (str[i] == 'l')
+				else if (str[i] == 'l')
 				{
 					addUserLimit(fd, sign, channelName, modifiedInput);
 					if (!modifiedInput.empty())
