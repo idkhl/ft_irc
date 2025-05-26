@@ -68,7 +68,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		std::string topicMessage = ":localhost 332 " + getClient(fd)->getNick() + " " + channelName + " :" + channelToJoin->getTopic() + "\r\n";
 		send(fd, topicMessage.c_str(), topicMessage.size(), 0);
 	}
-	reply(getClient(fd), RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
+	// reply(getClient(fd), RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
 }
 
 void	Server::quit(const int& fd)
