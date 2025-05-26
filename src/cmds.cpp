@@ -42,7 +42,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
-	std::string message = ":" + getClient(fd)->getNick() + " JOIN :" + channelName + "\r\n";
+	std::string message = ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@localhost JOIN :" + channelName + "\r\n";
 	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++) 
 		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
 
