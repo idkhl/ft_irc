@@ -17,7 +17,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	{
 		getClient(fd)->addChannel(channelName);
 		_channels.push_back(input.size() > 2 ? Channel(*getClient(fd), channelName) : Channel(*getClient(fd), channelName));
-		std::cout << "Channel " << channelName << " created!" << std::endl;
+		// std::cout << "Channel " << channelName << " created!" << std::endl;
 		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
 	}
 	else
@@ -137,14 +137,17 @@ bool	isValidNickname(const std::string& nickname)
         return false;
     char first = nickname[0];
     if (!std::isalpha(first) && !isSpecial(first))
+	{
         return false;
-    for (size_t i = 1; i < nickname.size(); ++i) {
-        char c = nickname[i];
-        if (!std::isalpha(c) && !std::isdigit(c) && !isSpecial(c) && c != '-') {
-			std::cout << "Test 3" << std::endl;
-            return false;
-        }
-    }
+	}
+	for (size_t i = 1; i < nickname.size(); ++i)
+	{
+		char c = nickname[i];
+		if (!std::isalnum(c) && !isSpecial(c))
+		{
+			return false;
+		}
+	}
     return true;
 }
 
@@ -172,7 +175,7 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 	if (isValidNickname(sub_nick))
 	{
 		std::string oldNick = client->getNick();
-		std::cout << "OLDNICK: " << client->getNick() << std::endl;
+		// std::cout << "OLDNICK: " << client->getNick() << std::endl;
 		client->setNick(sub_nick);
 		std::string msg = ":" + oldNick + "!" + client->getUser() + "@localhost NICK " + client->getNick() + "\r\n";
 		send(fd, msg.c_str(), msg.length(), 0);

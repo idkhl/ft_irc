@@ -6,7 +6,7 @@ void    Client::setAuthorization(const int& fd, const bool& allowed)
     if (_allowed == false)
     {
         std::string msg = "001 " + _nick +  " :Welcome to the IRC Network " + _nick + "!" + _user + "@localhost\n";
-        std::cout << msg << std::endl;
+        // std::cout << msg << std::endl;
         send(fd, msg.c_str(), msg.length(), 0);
 
         // reply(getClient(fd), RPL_WELCOME, " :Welcome to the IRC server");

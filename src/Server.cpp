@@ -158,7 +158,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 	return;
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
-	std::cout << "[" << cmd << "]" << std::endl;
+	// std::cout << "[" << cmd << "]" << std::endl;
 	if (cmd == "CAP" || cmd == "PASS" || cmd == "NICK" || cmd == "USER")
 		return (check_connexion(fd, input));
 	else if (cmd == "QUIT")
@@ -296,7 +296,7 @@ void	reply(std::vector<Client>::iterator client, std::string code, std::string m
 void	sendToIrssi(std::vector<Client>::iterator client, std::string message)
 {
 	std::string msg = ":localhost " + message + "\r\n";
-	std::cout << "SNDTOIRSSI [" << msg << "]" << std::endl;
+	// std::cout << "SNDTOIRSSI [" << msg << "]" << std::endl;
 	send(client->getFd(), msg.c_str(), msg.length(), 0);
 }
 
