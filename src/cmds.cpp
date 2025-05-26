@@ -45,8 +45,29 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	std::string message = ":" + getClient(fd)->getNick() + " JOIN :" + channelName + "\r\n";
 	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++) 
 		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
-	if (!getChannel(channelName)->getTopic().empty())
-		reply(getClient(fd), RPL_TOPIC, getClient(fd)->getNick() + " " + channelName + " :" + getChannel(channelName)->getTopic());
+
+	std::string userList = ":";
+	Channel* channelToJoin = &(*getChannel(channelName));
+	for (std::vector<Client *>::const_iterator it = channelToJoin->getClients().begin(); it != channelToJoin->getClients().end(); ++it) 
+	{
+		if (std::find(channelToJoin->getAdmins().begin(), channelToJoin->getAdmins().end(), (*it)->getFd()) != channelToJoin->getAdmins().end())
+			userList += "@" + (*it)->getNick() + " ";
+		else
+			userList += (*it)->getNick() + " ";
+	}
+	if (userList.size() > 1)
+		userList = userList.substr(0, userList.size() - 1);
+
+	std::string nameReply = ":localhost 353 " + getClient(fd)->getNick() + " = " + channelName + " " + userList + "\r\n";
+	send(fd, nameReply.c_str(), nameReply.size(), 0);
+	std::string endOfNames = ":localhost 366 " + getClient(fd)->getNick() + " " + channelName + " :End of  list.\r\n";
+	send(fd, endOfNames.c_str(), endOfNames.size(), 0);
+
+	if (!channelToJoin->getTopic().empty()) 
+	{
+		std::string topicMessage = ":localhost 332 " + getClient(fd)->getNick() + " " + channelName + " :" + channelToJoin->getTopic() + "\r\n";
+		send(fd, topicMessage.c_str(), topicMessage.size(), 0);
+	}
 	reply(getClient(fd), RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
 }
 
