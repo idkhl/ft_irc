@@ -144,3 +144,6 @@ et a l'interieur de cette boucle j'itere jusqu'au 1er espace en concatenant chaq
 a la chaine de caracteres
 et je rentre dans une fonction avec str, le compteur et le buffer pour effectuer tel ou tel
 comportement en fonction de la commande stockee dans str.
+
+
+Pour le ctrl-D quand il y a un ctrl-D au debut ou deux d'affilee ca ne marche pas mais normalement il ne faut pas gerer ces cas.

@@ -17,7 +17,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	{
 		getClient(fd)->addChannel(channelName);
 		_channels.push_back(input.size() > 2 ? Channel(*getClient(fd), channelName) : Channel(*getClient(fd), channelName));
-		// std::cout << "Channel " << channelName << " created!" << std::endl;
+		std::cout << "Channel " << channelName << " created!" << std::endl;
 		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
 	}
 	else

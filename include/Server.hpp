@@ -15,6 +15,7 @@
 #include <poll.h>
 #include <cctype>
 #include <cstdlib>
+#include <bits/stdc++.h>
 #include "Client.hpp"
 #include "Colors.h"
 #include "Channel.hpp"
@@ -98,7 +99,7 @@ class	Server
 		void				AcceptIncomingClient();
 		void				ReceiveDataClient(int fd);
 		int				ParseData(int fd, char *buff);
-		void				handleCmd(const int& fd, char *buff);
+		void				handleCmd(const int& fd, const char *buff);
 		void				nick(const int& fd, const std::vector<std::string>& input, int index);
 		void				user(const int& fd, const std::vector<std::string>& input, int index);
 		void				quit(const int& fd);

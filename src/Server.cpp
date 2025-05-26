@@ -151,7 +151,7 @@ static std::vector<std::string>	splitInput(std::string str)
 	return result;
 }
 
-void	Server::handleCmd(const int& fd, char *buff)
+void	Server::handleCmd(const int& fd, const char *buff)
 {
 	std::vector<std::string> input = splitInput(buff);
 	if (input.empty())
@@ -179,29 +179,31 @@ void	Server::handleCmd(const int& fd, char *buff)
 		topic(fd, input);
 	else if (cmd == "PING")
 		pong(fd, input.size() > 1 ? input[1] : "localhost");
-	else
-		broadcastToChannel(input);
+	// else
+	// 	broadcastToChannel(input);
 }
 
-void	Server::broadcastToChannel(const std::vector<std::string>& input)
-{
-	std::string channelName = input[1];
-	std::vector<Channel>::iterator channel = getChannel(channelName);
-	std::string message;
-	for (size_t i = 2 ; i < input.size() ; i++)
-		message += i == input.size() - 1 ? input[i] : input[i] + ' ';
-	if (channel != _channels.end())
-		channel->sendMessage(message);
-}
+// void	Server::broadcastToChannel(const std::vector<std::string>& input)
+// {
+// 	if (input[1])
+// 	std::string channelName = input[1];
+// 	std::vector<Channel>::iterator channel = getChannel(channelName);
+// 	std::string message;
+// 	for (size_t i = 2 ; i < input.size() ; i++)
+// 		message += i == input.size() - 1 ? input[i] : input[i] + ' ';
+// 	if (channel != _channels.end())
+// 		channel->sendMessage(message);
+// }
 
 void Server::ReceiveDataClient(int fd)
 {
+	static std::string buff_concat;
 	char buff[1024];
 	memset(buff, 0, sizeof(buff));
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
-
-	std::cout << "buffer = " << buff << std::endl;
+	
+	// std::cout << "buffer = " << buff << std::endl;
 
 	if (bytes <= 0)
 	{
@@ -209,11 +211,21 @@ void Server::ReceiveDataClient(int fd)
 		ClearClients(fd);
 		close(fd);
 	}
+	else if ((int)buff[bytes - 2] != 13)
+	{
+		buff_concat += buff;
+		return ;
+	}
 	else
 	{
+		buff_concat += buff;
 		buff[bytes] = '\0';
+		buff_concat[buff_concat.size() - 1] = '\0';
+		// std::cout << "buff_concat : " << buff_concat << std::endl;
 		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
-		handleCmd(fd, buff);
+		handleCmd(fd, buff_concat.c_str());
+		buff_concat.clear();
+		buff_concat = "";
 	}
 }
 
