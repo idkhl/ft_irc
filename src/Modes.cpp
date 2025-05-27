@@ -131,7 +131,7 @@ void	Server::addUserLimit(const int& fd, char sign, const std::string& channelNa
 	{
 		if (input.empty() || input[0].empty())
 			return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
-		size_t limit;
+		int limit;
 		limit = atoi(input[0].c_str());
 		if (limit > 0)
 		{

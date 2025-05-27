@@ -24,7 +24,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	{
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 			return (reply(getClient(fd), ERR_INVITEONLYCHAN, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+i)"));
-		if (getChannel(channelName)->getClientLimit() > 0 && getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
+		if (getChannel(channelName)->getClientLimit() > 0 && (int)getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
 			return reply(getClient(fd), ERR_CHANNELISFULL, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+l)");
 		if (getChannel(channelName)->getPassword().empty() == false)
 		{
@@ -60,7 +60,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 
 	std::string nameReply = ":localhost 353 " + getClient(fd)->getNick() + " = " + channelName + " " + userList + "\r\n";
 	send(fd, nameReply.c_str(), nameReply.size(), 0);
-	std::string endOfNames = ":localhost 366 " + getClient(fd)->getNick() + " " + channelName + " :End of  list.\r\n";
+	std::string endOfNames = ":localhost 366 " + getClient(fd)->getNick() + " " + channelName + " :End of list.\r\n";
 	send(fd, endOfNames.c_str(), endOfNames.size(), 0);
 
 	if (!channelToJoin->getTopic().empty()) 

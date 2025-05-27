@@ -73,7 +73,7 @@ Client	*Channel::getAdmin(const std::string& userName)
 
 void	Channel::addClient(Client& client)
 {
-	if (getClient(client.getFd()) == NULL && getClientCount() < _clientLimit)
+	if (getClient(client.getFd()) == NULL && ((int)_clientLimit != -1 || (int)getClientCount() < _clientLimit))
 		_clients.push_back(&client);
 }
 
