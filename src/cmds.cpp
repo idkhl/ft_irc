@@ -23,10 +23,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	else
 	{
 		if (getChannel(channelName)->getClient(fd) != NULL)
-		{
-			std::cout << "DEJA DEDANS\n";
 			return;
-		}
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 			return (reply(getClient(fd), ERR_INVITEONLYCHAN, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+i)"));
 		if (getChannel(channelName)->getClientLimit() > 0 && (int)getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
@@ -42,16 +39,15 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 				return;
 			}
 		}
-		std::cout << "adresse " << channelName << " apres: " << &(*getChannel(channelName)) << std::endl;
 		getChannel(channelName)->addClient(*getClient(fd));
 		getClient(fd)->addChannel(channelName);
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
 	std::string message = ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@localhost JOIN :" + channelName + "\r\n";
-	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
-		send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
-
+	std::list<Client *> clients = getChannel(channelName)->getClients();
+	for (std::list<Client *>::const_iterator client = clients.begin() ; client != clients.end() ; ++client)
+		send((*client)->getFd(), message.c_str(), message.size(), 0);
 	std::string userList = ":";
 	Channel& channelToJoin = *getChannel(channelName);
 	for (std::list<Client *>::const_iterator it = channelToJoin.getClients().begin(); it != channelToJoin.getClients().end(); ++it) 
