@@ -10,8 +10,10 @@ static void	sendGoodCommand(const Client& sender, Channel& channel, const std::s
 	// else
 	// 	std::cout << "NON\n";
 	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
-	for (size_t i = 0 ; i < channel.getClientCount() ; i++)
-		send((*channel.getClients().begin())->getFd(), message.c_str(), message.size(), 0);
+	std::list<Client *> clients = channel.getClients();
+	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
+		send((*client)->getFd(), message.c_str(), message.size(), 0);
+	
 }
 
 void	Server::addInvite(const int& fd, char sign, const std::string& channelName)
