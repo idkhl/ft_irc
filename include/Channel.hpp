@@ -31,7 +31,7 @@ class	Channel
 		std::string			_password;
 		bool				_inviteMode;
 		bool				_topicRestriction;
-		size_t				_clientLimit;
+		int				_clientLimit;
 
 	public:
 						Channel(Client& client, const std::string& name);
@@ -52,7 +52,7 @@ class	Channel
 		const std::vector<Client *>     &getClients() const {return _clients;}
 		std::string&			getPassword() {return _password;}
 		size_t 				getClientCount() const { return _clients.size(); }
-		size_t&				getClientLimit(void) {return _clientLimit;}
+		int&				getClientLimit(void) {return _clientLimit;}
 		
 		const bool&			isInviteOnly(void) const { return _inviteMode; }
 		const bool&			isTopicRestriction(void) const { return _topicRestriction; }
@@ -62,7 +62,7 @@ class	Channel
 		void				setTopicRestriction(bool mode) { _topicRestriction = mode; };
 		void 				setPassword(std::string pass) { _password = pass; }
 		void				setTopic(const std::string& topic) { _topic = topic; }
-		void				setClientLimit(size_t limit) {_clientLimit = limit;}
+		void				setClientLimit(int limit) {_clientLimit = limit;}
 		void				sendMessage(const std::string& message) const;
 
 		void				addClient(Client& client);
