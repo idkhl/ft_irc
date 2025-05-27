@@ -194,7 +194,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 // 		channel->sendMessage(message);
 // }
 
-void Server::ReceiveDataClient(int fd)
+void	 Server::ReceiveDataClient(int fd)
 {
 	char buff[1024];
 	memset(buff, 0, sizeof(buff));
@@ -299,15 +299,6 @@ void	sendToIrssi(std::list<Client>::iterator client, std::string message)
 	// std::cout << "SNDTOIRSSI [" << msg << "]" << std::endl;
 	send(client->getFd(), msg.c_str(), msg.length(), 0);
 }
-
-// void	reply(int fd, std::string code, std::string msg)
-// {
-// 	std::string response = ":localhost " + code;
-// 	response += " " + msg + "\r\n";
-// 	std::cout << "REPLY [" << response << "]" << std::endl;
-// 	send(fd, response.c_str(), response.length(), 0);
-// }
-
 void	Server::deleteChannel(const std::string& channelName)
 {
 	std::list<Channel>::iterator channel = getChannel(channelName);
