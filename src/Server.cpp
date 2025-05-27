@@ -203,29 +203,28 @@ void Server::ReceiveDataClient(int fd)
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
 	
-	// std::cout << "buffer = " << buff << std::endl;
-
 	if (bytes <= 0)
 	{
 		std::cout << RED << "Client <" << fd << "> Disconnected" << WHITE << std::endl;
 		ClearClients(fd);
 		close(fd);
+		return;
 	}
-	else if ((int)buff[bytes - 2] != 13)
+
+	buff[bytes] = '\0';
+	buff_concat += std::string(buff, bytes);
+
+	size_t pos;
+	while ((pos = buff_concat.find("\r\n")) != std::string::npos)
 	{
-		buff_concat += buff;
-		return ;
-	}
-	else
-	{
-		buff_concat += buff;
-		buff[bytes] = '\0';
-		buff_concat[buff_concat.size() - 1] = '\0';
-		// std::cout << "buff_concat : " << buff_concat << std::endl;
-		//here you can add your code to process the received data: parse, check, authenticate, handle the command, etc...
-		handleCmd(fd, buff_concat.c_str());
-		buff_concat.clear();
-		buff_concat = "";
+		std::string line = buff_concat.substr(0, pos + 2); // include \r\n
+		// Remove trailing \r\n for handleCmd
+		std::string cmd = line;
+		if (cmd.size() >= 2 && cmd.substr(cmd.size() - 2) == "\r\n")
+			cmd.erase(cmd.size() - 2);
+		if (!cmd.empty())
+			handleCmd(fd, cmd.c_str());
+		buff_concat.erase(0, pos + 2);
 	}
 }
 
