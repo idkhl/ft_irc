@@ -21,17 +21,17 @@ Channel::Channel(Client& client, const std::string& name, const std::string& top
 
 void	Channel::sendMessage(const std::string& message) const
 {
-	for (size_t i = 0 ; i < _clients.size() ; i++)
-		send(_clients[i]->getFd(), message.c_str(), strlen(message.c_str()), 0);
+	for (std::list<Client *>::const_iterator client = _clients.begin() ; client != _clients.end() ; ++client)
+		send((*client)->getFd(), message.c_str(), strlen(message.c_str()), 0);
 }
 
 void	Channel::deleteClient(const int& fd)
 {
-	for (size_t i = 0 ; i < _clients.size() ; i++)
+	for (std::list<Client *>::iterator client = _clients.begin() ; client != _clients.end() ; ++client)
 	{
-		if (_clients[i]->getFd() == fd)
+		if ((*client)->getFd() == fd)
 		{
-			_clients.erase(_clients.begin() + i);
+			_clients.erase(client);
 			return;
 		}
 	}
@@ -39,20 +39,20 @@ void	Channel::deleteClient(const int& fd)
 
 Client	*Channel::getClient(const int& fd)
 {
-	for (size_t i = 0 ; i < _clients.size() ; i++)
+	for (std::list<Client *>::const_iterator client = _clients.begin() ; client != _clients.end() ; ++client)
 	{
-		if (_clients[i]->getFd() == fd)
-			return _clients[i];
+		if ((*client)->getFd() == fd)
+			return *client;
 	}
 	return NULL;
 }
 
 Client	*Channel::getClient(const std::string& userName)
 {
-	for (size_t i = 0 ; i < _clients.size() ; i++)
+	for (std::list<Client *>::const_iterator client = _clients.begin() ; client != _clients.end() ; ++client)
 	{
-		if (_clients[i]->getUser() == userName)
-			return _clients[i];
+		if ((*client)->getUser() == userName)
+			return *client;
 	}
 	return NULL;
 }

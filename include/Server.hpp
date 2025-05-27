@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <algorithm>
+#include <list>
 #include <vector>
 #include <poll.h>
 #include <cctype>
@@ -78,17 +79,17 @@ class	Server
 		int 				ServSocket;
 		static bool			Signal;
 		char 				*Mdp;
-		std::vector<Client> 		clients;
+		std::list<Client> 		clients;
 		std::vector<struct pollfd> 	fds;
-		std::vector<Channel>		_channels;
+		std::list<Channel>		_channels;
 
 	public:
 						Server() { ServSocket = -1; }
 						~Server(void) { CloseFds(); }
 
-		std::vector<Client>::iterator	getClient(const int& fd) { return std::find(clients.begin(), clients.end(), fd); }
-		std::vector<Client>::iterator	getClient(const std::string& nickname) { return std::find(clients.begin(), clients.end(), nickname); }
-		std::vector<Channel>::iterator	getChannel(const std::string& channel) { return std::find(_channels.begin(), _channels.end(), channel); }
+		std::list<Client>::iterator	getClient(const int& fd) { return std::find(clients.begin(), clients.end(), fd); }
+		std::list<Client>::iterator	getClient(const std::string& nickname) { return std::find(clients.begin(), clients.end(), nickname); }
+		std::list<Channel>::iterator	getChannel(const std::string& channel) { return std::find(_channels.begin(), _channels.end(), channel); }
 		std::vector<std::string>	getUserInput(const int& fd);
 		size_t				getNbrChannel(void) const { return _channels.size(); }
 
@@ -123,7 +124,7 @@ class	Server
 		void				check_connexion(const int& fd, std::vector<std::string> input);
 
 		void				deleteChannel(const std::string& channelName);
-		void				deleteChannel(std::vector<Channel>::iterator channel) { _channels.erase(channel); }
+		void				deleteChannel(std::list<Channel>::iterator channel) { _channels.erase(channel); }
 
 		static void			SignalHandler(int signum);
 
@@ -132,5 +133,5 @@ class	Server
 
 };
 
-void	reply(std::vector<Client>::iterator client, std::string code, std::string msg);
-void	sendToIrssi(std::vector<Client>::iterator client, std::string message);
+void	reply(std::list<Client>::iterator client, std::string code, std::string msg);
+void	sendToIrssi(std::list<Client>::iterator client, std::string message);
