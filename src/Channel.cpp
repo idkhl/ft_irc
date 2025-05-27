@@ -10,15 +10,6 @@ Channel::Channel(Client& client, const std::string& name) : _name(name)
 	_clientLimit = -1;
 }
 
-Channel::Channel(Client& client, const std::string& name, const std::string& topic) :_name(name), _topic(topic)
-{
-	_adminFds.push_back(client.getFd());
-	_clients.push_back(&client);
-	_topicRestriction = false;
-	_inviteMode = false;
-	_clientLimit = -1;
-}
-
 void	Channel::sendMessage(const std::string& message) const
 {
 	for (std::list<Client *>::const_iterator client = _clients.begin() ; client != _clients.end() ; ++client)
@@ -73,7 +64,7 @@ Client	*Channel::getAdmin(const std::string& userName)
 
 void	Channel::addClient(Client& client)
 {
-	if (getClient(client.getFd()) == NULL && ((int)_clientLimit != -1 || (int)getClientCount() < _clientLimit))
+	if (getClient(client.getFd()) == NULL && (_clientLimit == -1 || (int)getClientCount() < _clientLimit))
 		_clients.push_back(&client);
 }
 

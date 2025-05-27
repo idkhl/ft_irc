@@ -155,7 +155,7 @@ void	Server::handleCmd(const int& fd, const char *buff)
 {
 	std::vector<std::string> input = splitInput(buff);
 	if (input.empty())
-	return;
+		return;
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
 	// std::cout << "[" << cmd << "]" << std::endl;
@@ -165,10 +165,10 @@ void	Server::handleCmd(const int& fd, const char *buff)
 		quit(fd);
 	else if (cmd == "JOIN")
 		join(fd, input);
-	if (getClient(fd)->getChannels().size() == 0)
-		return ;
-	if (cmd == "PRIVMSG")
+	else if (cmd == "PRIVMSG")
 		msg(fd, input);
+	if (getClient(fd)->getChannels().size() == 0)
+		return;
 	else if (cmd == "KICK")
 		kick(fd, input);
 	else if (cmd == "INVITE")
@@ -197,7 +197,7 @@ void	Server::handleCmd(const int& fd, const char *buff)
 // 		channel->sendMessage(message);
 // }
 
-void Server::ReceiveDataClient(int fd)
+void	 Server::ReceiveDataClient(int fd)
 {
 	static std::string buff_concat;
 	char buff[1024];
@@ -311,15 +311,6 @@ void	sendToIrssi(std::list<Client>::iterator client, std::string message)
 	// std::cout << "SNDTOIRSSI [" << msg << "]" << std::endl;
 	send(client->getFd(), msg.c_str(), msg.length(), 0);
 }
-
-// void	reply(int fd, std::string code, std::string msg)
-// {
-// 	std::string response = ":localhost " + code;
-// 	response += " " + msg + "\r\n";
-// 	std::cout << "REPLY [" << response << "]" << std::endl;
-// 	send(fd, response.c_str(), response.length(), 0);
-// }
-
 void	Server::deleteChannel(const std::string& channelName)
 {
 	std::list<Channel>::iterator channel = getChannel(channelName);

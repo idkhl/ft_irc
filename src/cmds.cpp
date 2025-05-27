@@ -12,12 +12,11 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	if (input.size() == 1)
 		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, input[0] + " :Not enough parameters"));
 	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
-
 	if (getChannel(channelName) == _channels.end())
 	{
 		getClient(fd)->addChannel(channelName);
-		_channels.push_back(input.size() > 2 ? Channel(*getClient(fd), channelName) : Channel(*getClient(fd), channelName));
-		// std::cout << "Channel " << channelName << " created!" << std::endl;
+		Channel channel(*getClient(fd), channelName);
+		_channels.push_back(channel);
 		getChannel(channelName)->addClient(*getClient(fd));
 		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
 	}
@@ -43,6 +42,7 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 				return;
 			}
 		}
+		std::cout << "adresse " << channelName << " apres: " << &(*getChannel(channelName)) << std::endl;
 		getChannel(channelName)->addClient(*getClient(fd));
 		getClient(fd)->addChannel(channelName);
 		std::cout << "Connected to channel " << channelName << "!" << std::endl;
@@ -323,7 +323,6 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 		reply(getClient(fd), ERR_NEEDMOREPARAMS, "PRIVMSG :Not enough parameters");
 		return;
 	}
-
 	std::string target = input[1];
 	std::string message;
 	for (size_t i = 2; i < input.size(); ++i)
@@ -338,7 +337,6 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 		std::list<Client *> members = chanIt->getClients();
 		for (std::list<Client *>::const_iterator member = members.begin() ; member != members.end() ; ++member)
 		{
-			std::cout << "clients dans le channel " << target << ":\n";
 			if ((*member)->getFd() != fd)
 			{
 				std::cout << "client : " << (*member)->getNick() << std::endl;
@@ -351,7 +349,6 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 	std::list<Client>::iterator userIt = getClient(target);
 	if (userIt != clients.end())
 	{
-		std::cout << "NETCAT\n";
 		std::string privMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
 		send(userIt->getFd(), privMsg.c_str(), privMsg.size(), 0);
 		return;
