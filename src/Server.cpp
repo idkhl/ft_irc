@@ -155,7 +155,7 @@ void	Server::handleCmd(const int& fd, char *buff)
 {
 	std::vector<std::string> input = splitInput(buff);
 	if (input.empty())
-	return;
+		return;
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
 	// std::cout << "[" << cmd << "]" << std::endl;
@@ -165,10 +165,10 @@ void	Server::handleCmd(const int& fd, char *buff)
 		quit(fd);
 	else if (cmd == "JOIN")
 		join(fd, input);
-	if (getClient(fd)->getChannels().size() == 0)
-		return ;
-	if (cmd == "PRIVMSG")
+	else if (cmd == "PRIVMSG")
 		msg(fd, input);
+	if (getClient(fd)->getChannels().size() == 0)
+		return;
 	else if (cmd == "KICK")
 		kick(fd, input);
 	else if (cmd == "INVITE")

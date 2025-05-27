@@ -311,48 +311,47 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 		send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
 }
 
-	void	Server::msg(const int& fd, const std::vector<std::string>& input)
+void	Server::msg(const int& fd, const std::vector<std::string>& input)
+{
+	if (!getClient(fd)->isAllowed())
 	{
-		if (!getClient(fd)->isAllowed())
-		{
-			messageFromServer(fd, "You have to be connected first:\n/USER\n/NICK\n/PASS\n");
-			return;
-		}
-		if (input.size() < 3)
-		{
-			reply(getClient(fd), ERR_NEEDMOREPARAMS, "PRIVMSG :Not enough parameters");
-			return;
-		}
-
-		std::string target = input[1];
-		std::string message;
-		for (size_t i = 2; i < input.size(); ++i)
-		{
-			if (!message.empty())
-				message += " ";
-			message += input[i];
-		}
-		std::list<Channel>::iterator chanIt = getChannel(target);
-		if (chanIt != _channels.end())
-		{
-			std::list<Client *> members = chanIt->getClients();
-			for (std::list<Client *>::const_iterator member = members.begin() ; member != members.end() ; ++member)
-			{
-				if ((*member)->getFd() != fd)
-				{
-					std::cout << "client : " << (*member)->getNick() << std::endl;
-					std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
-					send((*member)->getFd(), channelMsg.c_str(), channelMsg.size(), 0);
-				}
-			}
-			return;
-		}
-		std::list<Client>::iterator userIt = getClient(target);
-		if (userIt != clients.end())
-		{
-			std::string privMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
-			send(userIt->getFd(), privMsg.c_str(), privMsg.size(), 0);
-			return;
-		}
-		reply(getClient(fd), ERR_NOSUCHNICK, target + " :No such nick/channel");
+		messageFromServer(fd, "You have to be connected first:\n/USER\n/NICK\n/PASS\n");
+		return;
 	}
+	if (input.size() < 3)
+	{
+		reply(getClient(fd), ERR_NEEDMOREPARAMS, "PRIVMSG :Not enough parameters");
+		return;
+	}
+	std::string target = input[1];
+	std::string message;
+	for (size_t i = 2; i < input.size(); ++i)
+	{
+		if (!message.empty())
+			message += " ";
+		message += input[i];
+	}
+	std::list<Channel>::iterator chanIt = getChannel(target);
+	if (chanIt != _channels.end())
+	{
+		std::list<Client *> members = chanIt->getClients();
+		for (std::list<Client *>::const_iterator member = members.begin() ; member != members.end() ; ++member)
+		{
+			if ((*member)->getFd() != fd)
+			{
+				std::cout << "client : " << (*member)->getNick() << std::endl;
+				std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
+				send((*member)->getFd(), channelMsg.c_str(), channelMsg.size(), 0);
+			}
+		}
+		return;
+	}
+	std::list<Client>::iterator userIt = getClient(target);
+	if (userIt != clients.end())
+	{
+		std::string privMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
+		send(userIt->getFd(), privMsg.c_str(), privMsg.size(), 0);
+		return;
+	}
+	reply(getClient(fd), ERR_NOSUCHNICK, target + " :No such nick/channel");
+}
