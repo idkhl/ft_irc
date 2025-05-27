@@ -217,8 +217,7 @@ void Server::ReceiveDataClient(int fd)
 	size_t pos;
 	while ((pos = buff_concat.find("\r\n")) != std::string::npos)
 	{
-		std::string line = buff_concat.substr(0, pos + 2); // include \r\n
-		// Remove trailing \r\n for handleCmd
+		std::string line = buff_concat.substr(0, pos + 2);
 		std::string cmd = line;
 		if (cmd.size() >= 2 && cmd.substr(cmd.size() - 2) == "\r\n")
 			cmd.erase(cmd.size() - 2);
