@@ -11,12 +11,12 @@ static void	sendGoodCommand(const Client& sender, Channel& channel, const std::s
 	// 	std::cout << "NON\n";
 	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
 	for (size_t i = 0 ; i < channel.getClientCount() ; i++)
-		send(channel.getClients()[i]->getFd(), message.c_str(), message.size(), 0);
+		send((*channel.getClients().begin())->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::addInvite(const int& fd, char sign, const std::string& channelName)
 {
-	std::vector<Channel>::iterator channel = getChannel(channelName);
+	std::list<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
 		if (sign == '+')
@@ -39,7 +39,7 @@ void	Server::addInvite(const int& fd, char sign, const std::string& channelName)
 
 void	Server::addTopicRestriction(const int& fd, char sign, const std::string& channelName)
 {
-	std::vector<Channel>::iterator channel = getChannel(channelName);
+	std::list<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
 		if (sign == '+')
@@ -65,7 +65,7 @@ void	Server::addPassword(const int& fd, char sign, const std::string& channelNam
 	if (input.empty() || input[0].empty())
 		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 
-	std::vector<Channel>::iterator channel = getChannel(channelName);
+	std::list<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 	{
 		if (sign == '+')
@@ -101,11 +101,11 @@ void	Server::addOperator(char sign, const std::string& channelName, const int& f
 	if (input.empty() || input[0].empty())
 		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 
-	std::vector<Channel>::iterator channel = getChannel(channelName);
-	std::vector<Client>::iterator clientIt = getClient(input[0]);
+	std::list<Channel>::iterator channel = getChannel(channelName);
+	std::list<Client>::iterator clientIt = getClient(input[0]);
 	if (clientIt == clients.end())
 		return reply(getClient(fd), ERR_NOSUCHNICK, input[0] + " :No such nick/channel");
-	std::vector<Client>::iterator target = getClient(input[0]);
+	std::list<Client>::iterator target = getClient(input[0]);
 	if (target == clients.end() || !target->isInChannel(channelName))
 		return reply(getClient(fd), ERR_USERNOTINCHANNEL, input[0] + " " + channelName + " :They aren't on that channel");
 
@@ -126,7 +126,7 @@ void	Server::addOperator(char sign, const std::string& channelName, const int& f
 
 void	Server::addUserLimit(const int& fd, char sign, const std::string& channelName, std::vector<std::string>& input)
 {
-	std::vector<Channel>::iterator channel = getChannel(channelName);
+	std::list<Channel>::iterator channel = getChannel(channelName);
 	if (sign == '+')
 	{
 		if (input.empty() || input[0].empty())
@@ -209,7 +209,7 @@ void	Server::mode(const int& fd, const std::vector<std::string>& input)
 	}
 	if (input.size() < 3)
 		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
-	std::vector<Channel>::iterator channel = getChannel(channelName);
+	std::list<Channel>::iterator channel = getChannel(channelName);
 	if (channel == _channels.end())
 		return reply(getClient(fd), ERR_NOSUCHCHANNEL, channelName + " :No such channel");
 	if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)

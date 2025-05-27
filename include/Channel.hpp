@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <algorithm>
+#include <list>
 #include <vector>
 #include <poll.h>
 #include <cctype>
@@ -23,7 +24,7 @@ class Client;
 class	Channel
 {
 	private:
-		std::vector<Client *>		_clients;
+		std::list<Client *>		_clients;
 		std::string			_name;
 		std::vector<int>		_adminFds;
 		std::string			_topic;
@@ -49,7 +50,7 @@ class	Channel
 		Client				*getAdmin(const std::string& userName);
 		size_t				getNbrAdmins(void) const { return _adminFds.size(); }
 		const std::string&		getTopic(void) const { return _topic; }
-		const std::vector<Client *>     &getClients() const {return _clients;}
+		const std::list<Client *>     &getClients() const {return _clients;}
 		std::string&			getPassword() {return _password;}
 		size_t 				getClientCount() const { return _clients.size(); }
 		int&				getClientLimit(void) {return _clientLimit;}

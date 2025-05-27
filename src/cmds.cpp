@@ -17,11 +17,17 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	{
 		getClient(fd)->addChannel(channelName);
 		_channels.push_back(input.size() > 2 ? Channel(*getClient(fd), channelName) : Channel(*getClient(fd), channelName));
-		std::cout << "Channel " << channelName << " created!" << std::endl;
+		// std::cout << "Channel " << channelName << " created!" << std::endl;
+		getChannel(channelName)->addClient(*getClient(fd));
 		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
 	}
 	else
 	{
+		if (getChannel(channelName)->getClient(fd) != NULL)
+		{
+			std::cout << "DEJA DEDANS\n";
+			return;
+		}
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 			return (reply(getClient(fd), ERR_INVITEONLYCHAN, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+i)"));
 		if (getChannel(channelName)->getClientLimit() > 0 && (int)getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
@@ -43,14 +49,14 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
 	std::string message = ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@localhost JOIN :" + channelName + "\r\n";
-	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++) 
-		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
+	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
+		send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
 
 	std::string userList = ":";
-	Channel* channelToJoin = &(*getChannel(channelName));
-	for (std::vector<Client *>::const_iterator it = channelToJoin->getClients().begin(); it != channelToJoin->getClients().end(); ++it) 
+	Channel& channelToJoin = *getChannel(channelName);
+	for (std::list<Client *>::const_iterator it = channelToJoin.getClients().begin(); it != channelToJoin.getClients().end(); ++it) 
 	{
-		if (std::find(channelToJoin->getAdmins().begin(), channelToJoin->getAdmins().end(), (*it)->getFd()) != channelToJoin->getAdmins().end())
+		if (std::find(channelToJoin.getAdmins().begin(), channelToJoin.getAdmins().end(), (*it)->getFd()) != channelToJoin.getAdmins().end())
 			userList += "@" + (*it)->getNick() + " ";
 		else
 			userList += (*it)->getNick() + " ";
@@ -63,9 +69,9 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	std::string endOfNames = ":localhost 366 " + getClient(fd)->getNick() + " " + channelName + " :End of list.\r\n";
 	send(fd, endOfNames.c_str(), endOfNames.size(), 0);
 
-	if (!channelToJoin->getTopic().empty()) 
+	if (!channelToJoin.getTopic().empty()) 
 	{
-		std::string topicMessage = ":localhost 332 " + getClient(fd)->getNick() + " " + channelName + " :" + channelToJoin->getTopic() + "\r\n";
+		std::string topicMessage = ":localhost 332 " + getClient(fd)->getNick() + " " + channelName + " :" + channelToJoin.getTopic() + "\r\n";
 		send(fd, topicMessage.c_str(), topicMessage.size(), 0);
 	}
 	// reply(getClient(fd), RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
@@ -78,7 +84,7 @@ void	Server::quit(const int& fd)
 
 void	Server::pass(const int& fd, const std::vector<std::string>& input, int index)
 {
-	std::vector<Client>::iterator client = getClient(fd);
+	std::list<Client>::iterator client = getClient(fd);
 	if (client == clients.end())
 		return;
 	if (input.size() == 1)
@@ -107,7 +113,7 @@ void	Server::user(const int& fd, const std::vector<std::string>& input, int inde
 {
 	if (input.size() == 1)
 		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
-	std::vector<Client>::iterator client = getClient(fd);
+	std::list<Client>::iterator client = getClient(fd);
 	if (client->isConnected() == false)
 	{
 		messageFromServer(fd, "You have to enter the password first (/PASS <password>)\n");
@@ -155,7 +161,7 @@ void	Server::nick(const int& fd, const std::vector<std::string>& input, int inde
 {
 	if (input.size() == 1)
 		return (reply(getClient(fd), ERR_NONICKNAMEGIVEN, ":No nickname given"));
-	std::vector<Client>::iterator client = getClient(fd);
+	std::list<Client>::iterator client = getClient(fd);
 	if (client == clients.end())
 		return;
 	if (client->isConnected() == false)
@@ -214,7 +220,7 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 	if (getClient(target) == clients.end() || !getClient(target)->isInChannel(channelName))
 	{
 		for (size_t i = 0 ; i < getChannel(channelName)->getClients().size() ; i++)
-			std::cout << getChannel(channelName)->getClients()[i]->getNick() << std::endl;
+			std::cout << (*getChannel(channelName)->getClients().begin())->getNick() << std::endl;
 		reply(getClient(fd), ERR_USERNOTINCHANNEL, input[2] + " " + channelName + " :They aren't on that channel");
 	}
 	else
@@ -235,7 +241,7 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		message += "\r\n";
 		std::cout << message << std::endl;
 		for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
-			send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
+			send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
 		send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
 	}
 }
@@ -302,7 +308,7 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 	getChannel(channelName)->setTopic(topic);
 	std::string message = ":" + getClient(fd)->getNick() + " TOPIC " + channelName + " " + topic + "\r\n";
 	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
-		send(getChannel(channelName)->getClients()[i]->getFd(), message.c_str(), message.size(), 0);
+		send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::msg(const int& fd, const std::vector<std::string>& input)
@@ -326,24 +332,27 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 			message += " ";
 		message += input[i];
 	}
-	std::vector<Channel>::iterator chanIt = getChannel(target);
+	std::list<Channel>::iterator chanIt = getChannel(target);
 	if (chanIt != _channels.end())
 	{
-		std::vector<Client*> members = chanIt->getClients();
-		for (size_t i = 0; i < members.size(); ++i)
+		std::list<Client *> members = chanIt->getClients();
+		for (std::list<Client *>::const_iterator member = members.begin() ; member != members.end() ; ++member)
 		{
-			if (members[i]->getFd() != fd)
+			std::cout << "clients dans le channel " << target << ":\n";
+			if ((*member)->getFd() != fd)
 			{
+				std::cout << "client : " << (*member)->getNick() << std::endl;
 				std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
-				send(members[i]->getFd(), channelMsg.c_str(), channelMsg.size(), 0);
+				send((*member)->getFd(), channelMsg.c_str(), channelMsg.size(), 0);
 			}
 		}
 		return;
 	}
-	std::vector<Client>::iterator userIt = getClient(target);
+	std::list<Client>::iterator userIt = getClient(target);
 	if (userIt != clients.end())
 	{
-		std::string privMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " :" + message + "\r\n";
+		std::cout << "NETCAT\n";
+		std::string privMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
 		send(userIt->getFd(), privMsg.c_str(), privMsg.size(), 0);
 		return;
 	}

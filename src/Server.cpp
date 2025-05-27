@@ -12,10 +12,10 @@ void Server::SignalHandler(int signum)
 
 void Server::CloseFds()
 {
-	for(size_t i = 0; i < clients.size(); i++)
+	for (std::list<Client>::iterator it = clients.begin() ; it != clients.end() ; ++it)
 	{
-		std::cout << RED << "Client <" << this->clients[i].getFd() << "> Disconnected" << WHITE << std::endl;
-		close(this->clients[i].getFd());
+		std::cout << RED << "Client <" << it->getFd() << "> Disconnected" << WHITE << std::endl;
+		close(it->getFd());
 	}
 	if (this->ServSocket != -1)
 	{
@@ -181,6 +181,8 @@ void	Server::handleCmd(const int& fd, const char *buff)
 		pong(fd, input.size() > 1 ? input[1] : "localhost");
 	// else
 	// 	broadcastToChannel(input);
+	// else
+	// 	broadcastToChannel(input);
 }
 
 // void	Server::broadcastToChannel(const std::vector<std::string>& input)
@@ -268,10 +270,10 @@ void Server::ServerInit(int port, char *mdp)
 void Server::ClearClients(int fd)
 {
 	std::cout << RED << "Client <" << fd << "> Disconnected" << WHITE << std::endl;
-	std::vector<Client>::iterator client = getClient(fd);
+	std::list<Client>::iterator client = getClient(fd);
 	for (size_t i = 0 ; i < client->getChannels().size() ; i++)
 	{
-		std::vector<Channel>::iterator channel = getChannel(client->getChannels()[i]);
+		std::list<Channel>::iterator channel = getChannel(client->getChannels()[i]);
 		channel->deleteAdmin(fd);
 		channel->deleteClient(fd);
 		if (channel->getClientCount() == 0)
@@ -281,8 +283,8 @@ void Server::ClearClients(int fd)
 		}
 		if (channel->getNbrAdmins() == 0)
 		{
-			channel->addAdmin(channel->getClients()[0]->getFd());
-			messageFromServer(channel->getClients()[0]->getFd(), "You are now an operator of the channel " + channel->getName() + '\n');	
+			channel->addAdmin((*channel->getClients().begin())->getFd());
+			messageFromServer((*channel->getClients().begin())->getFd(), "You are now an operator of the channel " + channel->getName() + '\n');	
 		}
 	}
 	for (size_t i = 0; i < this->fds.size(); i++)
@@ -296,14 +298,14 @@ void Server::ClearClients(int fd)
 	clients.erase(getClient(fd));
 }
 
-void	reply(std::vector<Client>::iterator client, std::string code, std::string msg)
+void	reply(std::list<Client>::iterator client, std::string code, std::string msg)
 {
 	std::string response = ":localhost " + code;
 	response += ' ' + msg + "\r\n";
 	send(client->getFd(), response.c_str(), response.length(), 0);
 }
 
-void	sendToIrssi(std::vector<Client>::iterator client, std::string message)
+void	sendToIrssi(std::list<Client>::iterator client, std::string message)
 {
 	std::string msg = ":localhost " + message + "\r\n";
 	// std::cout << "SNDTOIRSSI [" << msg << "]" << std::endl;
@@ -320,7 +322,7 @@ void	sendToIrssi(std::vector<Client>::iterator client, std::string message)
 
 void	Server::deleteChannel(const std::string& channelName)
 {
-	std::vector<Channel>::iterator channel = getChannel(channelName);
+	std::list<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 		_channels.erase(channel);
 }
