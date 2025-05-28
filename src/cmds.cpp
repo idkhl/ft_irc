@@ -4,14 +4,44 @@
 
 void	Server::join(const int& fd, const std::vector<std::string>& input)
 {
-	if (getClient(fd)->isConnected() == false)
+	if (!getClient(fd)->isConnected())
 	{
 		messageFromServer(fd, "You have to be connected first:\n/USER\n/NICK\n/PASS\n");
 		return;
 	}
-	if (input.size() == 1)
-		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, input[0] + " :Not enough parameters"));
-	std::string channelName = input[1][0] == '#' ? input[1] : '#' + input[1];
+	if (input.size() < 2)
+		return reply(getClient(fd), ERR_NEEDMOREPARAMS, input[0] + " :Not enough parameters");
+
+	std::vector<std::string> channels;
+	std::vector<std::string> keys;
+	std::string::size_type start = 0, end;
+	std::string chans = input[1];
+	while ((end = chans.find(',', start)) != std::string::npos) {
+		channels.push_back(chans.substr(start, end - start));
+		start = end + 1;
+	}
+	channels.push_back(chans.substr(start));
+
+	if (input.size() > 2) {
+		start = 0;
+		std::string ks = input[2];
+		while ((end = ks.find(',', start)) != std::string::npos) {
+			keys.push_back(ks.substr(start, end - start));
+			start = end + 1;
+		}
+		keys.push_back(ks.substr(start));
+	}
+
+	for (size_t i = 0; i < channels.size(); ++i) {
+		std::string key = (i < keys.size()) ? keys[i] : "";
+		joinChannel(fd, input, channels[i], key);
+	}
+}
+
+void	Server::joinChannel(const int& fd, const std::vector<std::string>& /*input*/, std::string chan, std::string key)
+{
+	std::string channelName = (chan[0] == '#') ? chan : ('#' + chan);
+
 	if (getChannel(channelName) == _channels.end())
 	{
 		getClient(fd)->addChannel(channelName);
@@ -22,32 +52,27 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	}
 	else
 	{
-		if (getChannel(channelName)->getClient(fd) != NULL)
-			return;
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
-			return (reply(getClient(fd), ERR_INVITEONLYCHAN, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+i)"));
+			return reply(getClient(fd), ERR_INVITEONLYCHAN, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+i)");
 		if (getChannel(channelName)->getClientLimit() > 0 && (int)getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
 			return reply(getClient(fd), ERR_CHANNELISFULL, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+l)");
-		if (getChannel(channelName)->getPassword().empty() == false)
+		if (!getChannel(channelName)->getPassword().empty())
 		{
-			if (input.size() != 3)
-				return reply(getClient(fd), ERR_BADCHANNELKEY, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+k)");
-			if (strcmp(input[2].c_str(), (getChannel(channelName)->getPassword()).c_str()) != 0)
+			if (key.empty() || strcmp(key.c_str(), getChannel(channelName)->getPassword().c_str()) != 0)
 			{
-				std::cout << "Wrong password" << std::endl;
 				reply(getClient(fd), ERR_BADCHANNELKEY, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+k)");
 				return;
 			}
 		}
 		getChannel(channelName)->addClient(*getClient(fd));
 		getClient(fd)->addChannel(channelName);
-		std::cout << "Connected to channel " << channelName << "!" << std::endl;
 		messageFromServer(fd, std::string("Connected to channel " + channelName + "!\n"));
 	}
 	std::string message = ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@localhost JOIN :" + channelName + "\r\n";
 	std::list<Client *> clients = getChannel(channelName)->getClients();
-	for (std::list<Client *>::const_iterator client = clients.begin() ; client != clients.end() ; ++client)
+	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
 		send((*client)->getFd(), message.c_str(), message.size(), 0);
+
 	std::string userList = ":";
 	Channel& channelToJoin = *getChannel(channelName);
 	for (std::list<Client *>::const_iterator it = channelToJoin.getClients().begin(); it != channelToJoin.getClients().end(); ++it) 
@@ -70,7 +95,6 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 		std::string topicMessage = ":localhost 332 " + getClient(fd)->getNick() + " " + channelName + " :" + channelToJoin.getTopic() + "\r\n";
 		send(fd, topicMessage.c_str(), topicMessage.size(), 0);
 	}
-	// reply(getClient(fd), RPL_NAMREPLY, "= " + channelName + getClient(fd)->getNick());
 }
 
 void	Server::quit(const int& fd)
