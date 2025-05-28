@@ -16,23 +16,27 @@ void	Server::join(const int& fd, const std::vector<std::string>& input)
 	std::vector<std::string> keys;
 	std::string::size_type start = 0, end;
 	std::string chans = input[1];
-	while ((end = chans.find(',', start)) != std::string::npos) {
+	while ((end = chans.find(',', start)) != std::string::npos)
+	{
 		channels.push_back(chans.substr(start, end - start));
 		start = end + 1;
 	}
 	channels.push_back(chans.substr(start));
 
-	if (input.size() > 2) {
+	if (input.size() > 2)
+	{
 		start = 0;
 		std::string ks = input[2];
-		while ((end = ks.find(',', start)) != std::string::npos) {
+		while ((end = ks.find(',', start)) != std::string::npos)
+		{
 			keys.push_back(ks.substr(start, end - start));
 			start = end + 1;
 		}
 		keys.push_back(ks.substr(start));
 	}
 
-	for (size_t i = 0; i < channels.size(); ++i) {
+	for (size_t i = 0; i < channels.size(); ++i)
+	{
 		std::string key = (i < keys.size()) ? keys[i] : "";
 		joinChannel(fd, input, channels[i], key);
 	}
