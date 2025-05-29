@@ -179,23 +179,7 @@ void	Server::handleCmd(const int& fd, const char *buff)
 		topic(fd, input);
 	else if (cmd == "PING")
 		pong(fd, input.size() > 1 ? input[1] : "localhost");
-	// else
-	// 	broadcastToChannel(input);
-	// else
-	// 	broadcastToChannel(input);
 }
-
-// void	Server::broadcastToChannel(const std::vector<std::string>& input)
-// {
-// 	if (input[1])
-// 	std::string channelName = input[1];
-// 	std::vector<Channel>::iterator channel = getChannel(channelName);
-// 	std::string message;
-// 	for (size_t i = 2 ; i < input.size() ; i++)
-// 		message += i == input.size() - 1 ? input[i] : input[i] + ' ';
-// 	if (channel != _channels.end())
-// 		channel->sendMessage(message);
-// }
 
 void	 Server::ReceiveDataClient(int fd)
 {

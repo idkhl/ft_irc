@@ -254,13 +254,13 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		getChannel(channelName)->deleteAdmin(getClient(target)->getFd());
 		if (getChannel(channelName)->getClientCount() == 0)
 			deleteChannel(channelName);
-		std::string message = ":" + getClient(fd)->getNick() + " KICK " + channelName + " " + target;
-		if (input.size() > 4)
+		std::string message = ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@" + "localhost KICK " + channelName + " " + target;
+		if (input.size() > 3)
 		{
 			std::string reason;
 			for (size_t i = 3 ; i < input.size() ; i++)
 				reason += i == input.size() - 1 ? input[i] : input[i] + ' ';
-			message += " :" + reason;
+			message += reason;
 		}
 		message += "\r\n";
 		std::cout << message << std::endl;
@@ -281,7 +281,7 @@ void	Server::invite(const int& fd, const std::vector<std::string>& input)
 		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
 	std::string channelName = input[2];
 	std::string target = input[1];
-	if (getClient(fd)->isAdmin(*getChannel(channelName)) == false)
+	if (getChannel(channelName) != _channels.end() && getClient(fd)->isAdmin(*getChannel(channelName)) == false)
 		return (reply(getClient(fd), ERR_CHANOPRIVSNEEDED, channelName + " :You're not channel operator"));
 	if (getChannel(channelName) == _channels.end())
 		return (reply(getClient(fd), ERR_NOSUCHCHANNEL, channelName + " :No such channel"));
@@ -338,15 +338,13 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 void	Server::msg(const int& fd, const std::vector<std::string>& input)
 {
 	if (!getClient(fd)->isAllowed())
-	{
-		messageFromServer(fd, "You have to be connected first:\n/USER\n/NICK\n/PASS\n");
-		return;
-	}
+		return (messageFromServer(fd, "You have to be connected first:\n/USER\n/NICK\n/PASS\n"));
+	if (input.size() < 2)
+		return (reply(getClient(fd), ERR_NORECIPIENT, "PRIVMSG :No recipient given " + input[0]));
 	if (input.size() < 3)
-	{
-		reply(getClient(fd), ERR_NEEDMOREPARAMS, "PRIVMSG :Not enough parameters");
-		return;
-	}
+		return (reply(getClient(fd), ERR_NOTEXTTOSEND, "PRIVMSG :No text to send"));
+	if (input[1].find("@") != std::string::npos)
+		return (reply(getClient(fd), ERR_TOOMANYTARGETS, "PRIVMSG : " + input[1] + " :recipients. Using user@host destination is not allowed"));
 	std::string target = input[1];
 	std::string message;
 	for (size_t i = 2; i < input.size(); ++i)
@@ -358,6 +356,8 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 	std::list<Channel>::iterator chanIt = getChannel(target);
 	if (chanIt != _channels.end())
 	{
+		if (getChannel(input[1])->getClient(fd) == NULL)
+			return (reply(getClient(fd), ERR_NOTONCHANNEL, input[1] + " :You're not on that channel"));
 		std::list<Client *> members = chanIt->getClients();
 		for (std::list<Client *>::const_iterator member = members.begin() ; member != members.end() ; ++member)
 		{
