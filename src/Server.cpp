@@ -188,6 +188,7 @@ void	 Server::ReceiveDataClient(int fd)
 	memset(buff, 0, sizeof(buff));
 
 	ssize_t bytes = recv(fd, buff, sizeof(buff) - 1 , 0);
+	std::cout << "BUFFER: " << buff << std::endl;
 	
 	if (bytes <= 0)
 	{
