@@ -314,6 +314,11 @@ void	sendToIrssi(std::list<Client>::iterator client, std::string message)
 }
 void	Server::deleteChannel(const std::string& channelName)
 {
+	for (std::list<Client>::iterator client = clients.begin() ; client != clients.end() ; ++client)
+	{
+		if (client->isInChannel(channelName))
+			client->deleteChannel(channelName);
+	}
 	std::list<Channel>::iterator channel = getChannel(channelName);
 	if (channel != _channels.end())
 		_channels.erase(channel);

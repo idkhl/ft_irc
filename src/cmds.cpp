@@ -230,6 +230,22 @@ static void	sendGoodCommand(const Client& sender, Channel& channel, const std::s
 		send((*client)->getFd(), message.c_str(), message.size(), 0);
 }
 
+void	Server::sendKickMessage(const Channel& channel, const int& sender, const std::string& target, const std::vector<std::string>& input)
+{
+	std::string message = ":" + getClient(sender)->getNick() + "!" + getClient(sender)->getUser() + "@" + "localhost KICK " + channel.getName() + " " + target;
+	if (input.size() > 3)
+	{
+		std::string reason;
+		for (size_t i = 3 ; i < input.size() ; i++)
+			reason += i == input.size() - 1 ? input[i] : input[i] + ' ';
+		message += reason;
+	}
+	message += "\r\n";
+	std::cout << message << std::endl;
+	for (std::list<Client *>::const_iterator client = channel.getClients().begin() ; client != channel.getClients().end() ; ++client)
+		send((*client)->getFd(), message.c_str(), message.size(), 0);
+	send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
+}
 
 void	Server::kick(const int& fd, const std::vector<std::string>& input)
 {
@@ -250,38 +266,24 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 
 	std::string target = input[2];
 	if (getClient(target) == clients.end() || !getClient(target)->isInChannel(channelName))
-		reply(getClient(fd), ERR_USERNOTINCHANNEL, input[2] + " " + channelName + " :They aren't on that channel");
+		return reply(getClient(fd), ERR_USERNOTINCHANNEL, input[2] + " " + channelName + " :They aren't on that channel");
+	std::list<Channel>::iterator channel = getChannel(channelName);
+	if (channel->getClientCount() == 1)
+		return sendKickMessage(*channel, fd, target, input);
+	else if (channel->getAdmin(target) != NULL && channel->getNbrAdmins() == 1)
+	{
+		channel->delegatePower();
+		channel->deleteAdmin(getClient(target)->getFd());
+		sendGoodCommand(*getClient(fd), *channel, "+o", channel->getClient(channel->getAdmins()[0])->getNick());
+		channel->deleteClient(getClient(target)->getFd());
+		getClient(target)->deleteChannel(channelName);
+	}
 	else
 	{
+		channel->deleteClient(getClient(target)->getFd());
 		getClient(target)->deleteChannel(channelName);
-		if (getChannel(channelName)->getClientCount() == 0)
-			deleteChannel(channelName);
-		else if (getChannel(channelName)->getAdmin(target) != NULL && getChannel(channelName)->getNbrAdmins() == 1)
-		{
-			std::cout << "delete en vrai\n";
-			std::list<Client *>::const_iterator newAdmin = getChannel(channelName)->getClients().begin();
-			++newAdmin;
-			sendGoodCommand(*getClient(fd), *getChannel(channelName), "+o", (*newAdmin)->getNick());
-			getChannel(channelName)->deleteAdmin(getClient(target)->getFd());
-			getChannel(channelName)->delegatePower();
-		}
-		getChannel(channelName)->deleteClient(getClient(target)->getFd());
-		std::string message = ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@" + "localhost KICK " + channelName + " " + target;
-		if (input.size() > 3)
-		{
-			std::string reason;
-			for (size_t i = 3 ; i < input.size() ; i++)
-				reason += i == input.size() - 1 ? input[i] : input[i] + ' ';
-			message += reason;
-		}
-		message += "\r\n";
-		std::cout << message << std::endl;
-		for (std::list<Client *>::const_iterator client = getChannel(channelName)->getClients().begin() ; client != getChannel(channelName)->getClients().end() ; ++client)
-			send((*client)->getFd(), message.c_str(), message.size(), 0);
-		// for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
-		// 	send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
-		send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
 	}
+	sendKickMessage(*channel, fd, target, input);
 }
 
 void	Server::invite(const int& fd, const std::vector<std::string>& input)

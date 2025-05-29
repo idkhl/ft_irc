@@ -75,4 +75,11 @@ void	Channel::deleteAdmin(const int& fd)
 		_adminFds.erase(admin);
 }
 
-void	Channel::delegatePower(void) { addAdmin((*_clients.begin())->getFd()); }
+void	Channel::delegatePower(void)
+{
+	for (std::list<Client *>::iterator client = _clients.begin() ; client != _clients.end() ; ++client)
+	{
+		if (getAdmin((*client)->getNick()) == NULL)
+			return addAdmin((*client)->getFd());
+	}
+}

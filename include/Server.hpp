@@ -134,6 +134,7 @@ class	Server
 
 		void				CloseFds();
 		void				ClearClients(int fd);
+		void				sendKickMessage(const Channel& channel, const int& sender, const std::string& target, const std::vector<std::string>& input);
 
 };
 
