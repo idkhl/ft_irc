@@ -74,3 +74,5 @@ void	Channel::deleteAdmin(const int& fd)
 	if (admin != _adminFds.end())
 		_adminFds.erase(admin);
 }
+
+void	Channel::delegatePower(void) { addAdmin((*_clients.begin())->getFd()); }

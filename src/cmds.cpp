@@ -163,13 +163,11 @@ bool	isSpecial(char c)
 
 bool	isValidNickname(const std::string& nickname)
 {
-    if (nickname.empty() || nickname.size() > 9)
-        return false;
-    char first = nickname[0];
-    if (!std::isalpha(first) && !isSpecial(first))
-	{
-        return false;
-	}
+	if (nickname.empty() || nickname.size() > 9)
+		return false;
+	char first = nickname[0];
+	if (!std::isalpha(first) && !isSpecial(first))
+	return false;
 	for (size_t i = 1; i < nickname.size(); ++i)
 	{
 		char c = nickname[i];
@@ -178,7 +176,7 @@ bool	isValidNickname(const std::string& nickname)
 			return false;
 		}
 	}
-    return true;
+	return true;
 }
 
 void	Server::nick(const int& fd, const std::vector<std::string>& input, int index)
@@ -223,6 +221,16 @@ void	Server::pong(const int& fd, std::string token)
 	send(fd, message.c_str(), message.size(), 0);
 }
 
+static void	sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
+{
+	std::string message = ":" + sender.getNick() + " MODE " + channel.getName() + " " + mode;
+	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
+	std::list<Client *> clients = channel.getClients();
+	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
+		send((*client)->getFd(), message.c_str(), message.size(), 0);
+}
+
+
 void	Server::kick(const int& fd, const std::vector<std::string>& input)
 {
 	if (getClient(fd)->isConnected() == false)
@@ -242,18 +250,22 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 
 	std::string target = input[2];
 	if (getClient(target) == clients.end() || !getClient(target)->isInChannel(channelName))
-	{
-		for (size_t i = 0 ; i < getChannel(channelName)->getClients().size() ; i++)
-			std::cout << (*getChannel(channelName)->getClients().begin())->getNick() << std::endl;
 		reply(getClient(fd), ERR_USERNOTINCHANNEL, input[2] + " " + channelName + " :They aren't on that channel");
-	}
 	else
 	{
 		getClient(target)->deleteChannel(channelName);
-		getChannel(channelName)->deleteClient(getClient(target)->getFd());
-		getChannel(channelName)->deleteAdmin(getClient(target)->getFd());
 		if (getChannel(channelName)->getClientCount() == 0)
 			deleteChannel(channelName);
+		else if (getChannel(channelName)->getAdmin(target) != NULL && getChannel(channelName)->getNbrAdmins() == 1)
+		{
+			std::cout << "delete en vrai\n";
+			std::list<Client *>::const_iterator newAdmin = getChannel(channelName)->getClients().begin();
+			++newAdmin;
+			sendGoodCommand(*getClient(fd), *getChannel(channelName), "+o", (*newAdmin)->getNick());
+			getChannel(channelName)->deleteAdmin(getClient(target)->getFd());
+			getChannel(channelName)->delegatePower();
+		}
+		getChannel(channelName)->deleteClient(getClient(target)->getFd());
 		std::string message = ":" + getClient(fd)->getNick() + "!" + getClient(fd)->getUser() + "@" + "localhost KICK " + channelName + " " + target;
 		if (input.size() > 3)
 		{
@@ -264,8 +276,10 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		}
 		message += "\r\n";
 		std::cout << message << std::endl;
-		for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
-			send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
+		for (std::list<Client *>::const_iterator client = getChannel(channelName)->getClients().begin() ; client != getChannel(channelName)->getClients().end() ; ++client)
+			send((*client)->getFd(), message.c_str(), message.size(), 0);
+		// for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
+		// 	send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
 		send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
 	}
 }
@@ -331,8 +345,9 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 	}
 	getChannel(channelName)->setTopic(topic);
 	std::string message = ":" + getClient(fd)->getNick() + " TOPIC " + channelName + " " + topic + "\r\n";
-	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
-		send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
+	std::list<Client *> clients = getChannel(channelName)->getClients();
+	for (std::list<Client *>::const_iterator client = clients.begin() ; client != clients.end() ; ++client)
+		send((*client)->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::msg(const int& fd, const std::vector<std::string>& input)

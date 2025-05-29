@@ -69,4 +69,5 @@ class	Channel
 		void 				addAdmin(int fd) { if (std::find(_adminFds.begin(), _adminFds.end(), fd) == _adminFds.end()) _adminFds.push_back(fd); }
 		void				deleteClient(const int& fd);
 		void				deleteAdmin(const int& fd);
+		void				delegatePower(void);
 };

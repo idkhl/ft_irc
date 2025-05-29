@@ -139,7 +139,14 @@ static std::vector<std::string>	splitInput(std::string str)
 	while (start < str.size())
 	{
 		while (start < str.size() && str[start] == ' ')
+		{
 			start++;
+			if (str[start] == ':')
+			{
+				result.push_back(str.substr(start, str.size() - start));
+				return result;
+			}
+		}
 		if (start >= str.size())
 			break;
 		size_t end = start;
@@ -252,6 +259,15 @@ void Server::ServerInit(int port, char *mdp)
 	CloseFds();
 }
 
+static void	sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
+{
+	std::string message = ":" + sender.getNick() + " MODE " + channel.getName() + " " + mode;
+	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
+	std::list<Client *> clients = channel.getClients();
+	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
+		send((*client)->getFd(), message.c_str(), message.size(), 0);
+}
+
 void Server::ClearClients(int fd)
 {
 	std::cout << RED << "Client <" << fd << "> Disconnected" << WHITE << std::endl;
@@ -268,8 +284,9 @@ void Server::ClearClients(int fd)
 		}
 		if (channel->getNbrAdmins() == 0)
 		{
-			channel->addAdmin((*channel->getClients().begin())->getFd());
-			messageFromServer((*channel->getClients().begin())->getFd(), "You are now an operator of the channel " + channel->getName() + '\n');	
+			channel->delegatePower();
+			std::string newAdmin = (*channel->getClients().begin())->getNick();
+			sendGoodCommand(*getClient(fd), *channel, "+o", newAdmin);
 		}
 	}
 	for (size_t i = 0; i < this->fds.size(); i++)
@@ -293,7 +310,6 @@ void	reply(std::list<Client>::iterator client, std::string code, std::string msg
 void	sendToIrssi(std::list<Client>::iterator client, std::string message)
 {
 	std::string msg = ":localhost " + message + "\r\n";
-	// std::cout << "SNDTOIRSSI [" << msg << "]" << std::endl;
 	send(client->getFd(), msg.c_str(), msg.length(), 0);
 }
 void	Server::deleteChannel(const std::string& channelName)
