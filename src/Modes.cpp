@@ -4,13 +4,14 @@
 
 static void	sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
 {
-	std::string message = ":" + sender.getNick() + " MODE " + channel.getName() + " " + mode;
+	std::string message = ":" + sender.getNick() + "!" + sender.getUser() + "@localhost" + " MODE " + channel.getName() + " " + mode;
 	// if (target.empty())
 	// 	std::cout << "EMPTY\n";
 	// else
 	// 	std::cout << "NON\n";
 	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
 	std::list<Client *> clients = channel.getClients();
+	std::cout << "->" << message << std::endl;
 	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
 		send((*client)->getFd(), message.c_str(), message.size(), 0);
 	

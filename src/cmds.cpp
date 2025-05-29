@@ -331,8 +331,11 @@ void	Server::topic(const int& fd, const std::vector<std::string>& input)
 	}
 	getChannel(channelName)->setTopic(topic);
 	std::string message = ":" + getClient(fd)->getNick() + " TOPIC " + channelName + " " + topic + "\r\n";
-	for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
-		send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
+	std::list<Client *> clients = getChannel(channelName)->getClients();
+	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
+		send((*client)->getFd(), message.c_str(), message.size(), 0);
+	// for (size_t i = 0 ; i < getChannel(channelName)->getClientCount() ; i++)
+	// 	send((*getChannel(channelName)->getClients().begin())->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::msg(const int& fd, const std::vector<std::string>& input)
