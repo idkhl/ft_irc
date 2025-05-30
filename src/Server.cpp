@@ -295,6 +295,7 @@ void	reply(std::list<Client>::iterator client, std::string code, std::string msg
 {
 	std::string response = ":localhost " + code;
 	response += ' ' + msg + "\r\n";
+	std::cout << "reply ->" << response << std::endl;
 	send(client->getFd(), response.c_str(), response.length(), 0);
 }
 
