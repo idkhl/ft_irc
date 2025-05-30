@@ -42,7 +42,7 @@ Client	*Channel::getClient(const std::string& userName)
 {
 	for (std::list<Client *>::const_iterator client = _clients.begin() ; client != _clients.end() ; ++client)
 	{
-		if ((*client)->getUser() == userName)
+		if ((*client)->getNick() == userName)
 			return *client;
 	}
 	return NULL;

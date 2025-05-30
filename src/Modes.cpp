@@ -2,15 +2,6 @@
 #include <limits>
 #include <algorithm>
 
-static void	sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
-{
-	std::string message = ":" + sender.getNick() + " MODE " + channel.getName() + " " + mode;
-	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
-	std::list<Client *> clients = channel.getClients();
-	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
-		send((*client)->getFd(), message.c_str(), message.size(), 0);
-}
-
 void	Server::addInvite(const int& fd, char sign, const std::string& channelName)
 {
 	std::list<Channel>::iterator channel = getChannel(channelName);

@@ -52,7 +52,7 @@ void	Server::joinChannel(const int& fd, const std::vector<std::string>& /*input*
 		Channel channel(*getClient(fd), channelName);
 		_channels.push_back(channel);
 		getChannel(channelName)->addClient(*getClient(fd));
-		messageFromServer(fd, std::string("Channel " + channelName + " created!\n"));
+		getChannel(channelName)->addAdmin(fd);
 	}
 	else
 	{
@@ -221,13 +221,14 @@ void	Server::pong(const int& fd, std::string token)
 	send(fd, message.c_str(), message.size(), 0);
 }
 
-static void	sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
+void	Server::sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
 {
 	std::string message = ":" + sender.getNick() + " MODE " + channel.getName() + " " + mode;
 	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
 	std::list<Client *> clients = channel.getClients();
 	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
 		send((*client)->getFd(), message.c_str(), message.size(), 0);
+	send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::sendKickMessage(const Channel& channel, const int& sender, const std::string& target, const std::vector<std::string>& input)
@@ -244,7 +245,8 @@ void	Server::sendKickMessage(const Channel& channel, const int& sender, const st
 	std::cout << message << std::endl;
 	for (std::list<Client *>::const_iterator client = channel.getClients().begin() ; client != channel.getClients().end() ; ++client)
 		send((*client)->getFd(), message.c_str(), message.size(), 0);
-	send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
+	if (getClient(sender)->getNick() != target)
+		send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& input)
@@ -269,8 +271,12 @@ void	Server::kick(const int& fd, const std::vector<std::string>& input)
 		return reply(getClient(fd), ERR_USERNOTINCHANNEL, input[2] + " " + channelName + " :They aren't on that channel");
 	std::list<Channel>::iterator channel = getChannel(channelName);
 	if (channel->getClientCount() == 1)
-		return sendKickMessage(*channel, fd, target, input);
-	else if (channel->getAdmin(target) != NULL && channel->getNbrAdmins() == 1)
+	{
+		sendKickMessage(*channel, fd, target, input);
+		deleteChannel(channelName);
+		return;
+	}
+	if (channel->getAdmin(target) != NULL && channel->getNbrAdmins() == 1)
 	{
 		channel->delegatePower();
 		channel->deleteAdmin(getClient(target)->getFd());

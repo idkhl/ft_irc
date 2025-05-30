@@ -259,15 +259,6 @@ void Server::ServerInit(int port, char *mdp)
 	CloseFds();
 }
 
-static void	sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
-{
-	std::string message = ":" + sender.getNick() + " MODE " + channel.getName() + " " + mode;
-	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
-	std::list<Client *> clients = channel.getClients();
-	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
-		send((*client)->getFd(), message.c_str(), message.size(), 0);
-}
-
 void Server::ClearClients(int fd)
 {
 	std::cout << RED << "Client <" << fd << "> Disconnected" << WHITE << std::endl;
