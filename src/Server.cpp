@@ -165,7 +165,6 @@ void	Server::handleCmd(const int& fd, const char *buff)
 		return;
 	std::string cmd = input[0];
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
-	// std::cout << "[" << cmd << "]" << std::endl;
 	if (cmd == "CAP" || cmd == "PASS" || cmd == "NICK" || cmd == "USER")
 		return (check_connexion(fd, input));
 	else if (cmd == "QUIT")
