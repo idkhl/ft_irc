@@ -109,7 +109,7 @@ class	Server
 		void				pass(const int& fd, const std::vector<std::string>& input, int index);
 		void				join(const int& fd, const std::vector<std::string>& input);
 		void				joinChannel(const int& fd, const std::vector<std::string>& input, std::string chan, std::string key);
-		void				part(const int& fd);
+		void				part(const int& fd, const std::vector<std::string>& input);
 		void				pong(const int& fd, std::string token);
 		void				kick(const int& fd, const std::vector<std::string>& usersToKick);
 		void				invite(const int& fd, const std::vector<std::string>& usersToInvite);

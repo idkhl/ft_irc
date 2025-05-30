@@ -186,6 +186,8 @@ void	Server::handleCmd(const int& fd, const char *buff)
 		topic(fd, input);
 	else if (cmd == "PING")
 		pong(fd, input.size() > 1 ? input[1] : "localhost");
+	else if (cmd == "PART")
+		part(fd, input);
 }
 
 void	 Server::ReceiveDataClient(int fd)
@@ -295,7 +297,6 @@ void	reply(std::list<Client>::iterator client, std::string code, std::string msg
 {
 	std::string response = ":localhost " + code;
 	response += ' ' + msg + "\r\n";
-	std::cout << "reply ->" << response << std::endl;
 	send(client->getFd(), response.c_str(), response.length(), 0);
 }
 

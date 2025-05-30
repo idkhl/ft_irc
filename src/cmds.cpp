@@ -48,6 +48,7 @@ void	Server::joinChannel(const int& fd, const std::vector<std::string>& /*input*
 
 	if (getChannel(channelName) == _channels.end())
 	{
+		std::cout << "Channel " << channelName << " created!\n";
 		getClient(fd)->addChannel(channelName);
 		Channel channel(*getClient(fd), channelName);
 		_channels.push_back(channel);
@@ -56,6 +57,7 @@ void	Server::joinChannel(const int& fd, const std::vector<std::string>& /*input*
 	}
 	else
 	{
+		std::cout << "Channel " << channelName << " joined!\n";
 		if (getChannel(channelName)->isInviteOnly() && !getClient(fd)->isInvitedIn(channelName))
 			return reply(getClient(fd), ERR_INVITEONLYCHAN, getClient(fd)->getNick() + " " + channelName + " :Cannot join channel (+i)");
 		if (getChannel(channelName)->getClientLimit() > 0 && (int)getChannel(channelName)->getClientCount() == getChannel(channelName)->getClientLimit())
@@ -223,12 +225,13 @@ void	Server::pong(const int& fd, std::string token)
 
 void	Server::sendGoodCommand(const Client& sender, Channel& channel, const std::string& mode, const std::string& target)
 {
-	std::string message = ":" + sender.getNick() + " MODE " + channel.getName() + " " + mode;
+	std::string message = ":" + sender.getNick() + "!" + sender.getUser() + "@localhost MODE " + channel.getName() + " " + mode;
 	target.empty() ? message += "\r\n" : message += " " + target + "\r\n";
 	std::list<Client *> clients = channel.getClients();
 	for (std::list<Client *>::const_iterator client = clients.begin(); client != clients.end(); ++client)
 		send((*client)->getFd(), message.c_str(), message.size(), 0);
-	send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
+	// if (sender.getNick() != target)
+	// 	send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::sendKickMessage(const Channel& channel, const int& sender, const std::string& target, const std::vector<std::string>& input)
@@ -247,6 +250,51 @@ void	Server::sendKickMessage(const Channel& channel, const int& sender, const st
 		send((*client)->getFd(), message.c_str(), message.size(), 0);
 	if (getClient(sender)->getNick() != target)
 		send(getClient(target)->getFd(), message.c_str(), message.size(), 0);
+}
+
+void	Server::part(const int& fd, const std::vector<std::string>& input)
+{
+	if (getClient(fd)->isConnected() == false)
+	{
+		messageFromServer(fd, "You have to be connected first:\n/USER\n/NICK\n/PASS\n");
+		return;
+	}
+	if (input.size() < 2)
+		return (reply(getClient(fd), ERR_NEEDMOREPARAMS, " :Not enough parameters"));
+	std::string channelName = input[1];
+	if (getChannel(channelName) == _channels.end())
+		return (reply(getClient(fd), ERR_NOSUCHCHANNEL, channelName + " :No such channel"));
+	if (!getClient(fd)->isInChannel(channelName))
+		return (reply(getClient(fd), ERR_NOTONCHANNEL, channelName + " :You're not on that channel"));
+
+	std::string target = getClient(fd)->getNick();
+	if (getClient(target) == clients.end() || !getClient(target)->isInChannel(channelName))
+		return reply(getClient(fd), ERR_USERNOTINCHANNEL, target + " " + channelName + " :They aren't on that channel");
+	std::list<Channel>::iterator channel = getChannel(channelName);
+	if (channel->getClientCount() == 1)
+	{
+		std::string message = ":" + target + "!" + getClient(target)->getUser() + "@localhost PART " + channelName + "\r\n";
+		for (std::list<Client *>::const_iterator client = channel->getClients().begin() ; client != channel->getClients().end() ; ++client)
+			send((*client)->getFd(), message.c_str(), message.size(), 0);
+		deleteChannel(channelName);
+		return;
+	}
+	if (channel->getAdmin(target) != NULL && channel->getNbrAdmins() == 1)
+	{
+		channel->delegatePower();
+		channel->deleteAdmin(getClient(target)->getFd());
+		sendGoodCommand(*getClient(fd), *channel, "+o", channel->getClient(channel->getAdmins()[0])->getNick());
+		channel->deleteClient(getClient(target)->getFd());
+		getClient(target)->deleteChannel(channelName);
+	}
+	else
+	{
+		channel->deleteClient(getClient(target)->getFd());
+		getClient(target)->deleteChannel(channelName);
+	}
+	std::string message = ":" + target + "!" + getClient(target)->getUser() + "@localhost PART " + channelName + "\r\n";
+	for (std::list<Client *>::const_iterator client = channel->getClients().begin() ; client != channel->getClients().end() ; ++client)
+			send((*client)->getFd(), message.c_str(), message.size(), 0);
 }
 
 void	Server::kick(const int& fd, const std::vector<std::string>& input)
@@ -386,7 +434,6 @@ void	Server::msg(const int& fd, const std::vector<std::string>& input)
 		{
 			if ((*member)->getFd() != fd)
 			{
-				std::cout << "client : " << (*member)->getNick() << std::endl;
 				std::string channelMsg = ":" + getClient(fd)->getNick() + " PRIVMSG " + target + " " + message + "\r\n";
 				send((*member)->getFd(), channelMsg.c_str(), channelMsg.size(), 0);
 			}

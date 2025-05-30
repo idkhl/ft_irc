@@ -105,7 +105,7 @@ void	Server::addOperator(char sign, const std::string& channelName, const int& f
 	}
 	else
 	{
-		getChannel(channelName)->deleteAdmin(fd);
+		getChannel(channelName)->deleteAdmin(target->getFd());
 		sendGoodCommand(*getClient(fd), *channel, "-o", target->getNick());
 		std::cout << input[0] << " is not an operator anymore" << std::endl;
 	}
