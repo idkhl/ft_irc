@@ -285,6 +285,7 @@ void Server::ClearClients(int fd)
 	{
 		if (this->fds[i].fd == fd)
 		{
+			close(fds[i].fd);
 			this->fds.erase(this->fds.begin() + i);
 			break;
 		}
